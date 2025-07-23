@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nova Translator | ZOX Robotics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --accent: #21c8ff;
+      --accent2: #ff6ae7;
+      --panel: #181c38;
+      --surface: #232a3a;
+      --text: #fff;
+      --highlight: #2cffb9;
+      --fail: #ff607a;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #232a3a 0%, #3b527b 100%);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .logo-bar {
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      margin-top: 2em;
+      margin-bottom: 0.5em;
+    }
+    .logo-bar img {
+      width: 180px;
+      height: auto;
+      object-fit: contain;
+      box-shadow: 0 2px 12px #13f5ff66;
+      border-radius: 16px;
+      border: 2.5px solid #10c6ff88;
+      background: #fff;
+      padding: 0.4em 1.5em 0.2em 1.5em;
+    }
+    .container {
+      max-width: 820px;
+      width: 98vw;
+      background: var(--panel);
+      border-radius: 32px;
+      box-shadow: 0 10px 32px #00a2ff55, 0 3px 24px #0004;
+      padding: 2.5em 2.1em 2.2em 2.1em;
+      margin: 0 auto;
+      border: 2.5px solid #21c8ff33;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2 {
+      font-size: 2.2rem;
+      margin-bottom: 1.2em;
+      font-weight: 900;
+      letter-spacing: 2.3px;
+      background: linear-gradient(90deg, var(--accent) 23%, var(--accent2) 87%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-top: 0;
+      text-align: center;
+      text-shadow: 0 4px 18px #09ffe3a2;
+    }
+    .flip-row {
+      display: flex;
+      width: 100%;
+      gap: 1.2em;
+      align-items: flex-end;
+      justify-content: center;
+      margin-bottom: 1.1em;
+    }
+    .lang-panel {
+      flex: 1;
+      min-width: 290px;
+      max-width: 340px;
+      background: linear-gradient(120deg, #222a45 60%, #242a5c 100%);
+      padding: 1.1em 1.1em 1.25em 1.1em;
+      border-radius: 22px;
+      box-shadow: 0 2px 12px #13f7ff24;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border: 2px solid #5ad0fd33;
+      min-height: 210px;
+    }
+    .label {
+      color: var(--highlight);
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 0.35em;
+      letter-spacing: 0.03em;
+      text-shadow: 0 2px 8px #12fff9a0;
+    }
+    .lang-select-row {
+      display: flex;
+      gap: 0.4em;
+      align-items: center;
+      margin-bottom: 0.3em;
+    }
+    select {
+      flex: 1;
+      padding: 0.4em 0.9em;
+      border-radius: 11px;
+      border: 1.7px solid #28f3e988;
+      background: #232e48;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      outline: none;
+    }
+    textarea, .output-box {
+      width: 100%;
+      margin: 0.12em auto 0.1em auto;
+      border-radius: 14px;
+      font-size: 1.13rem;
+      background: #232a3a;
+      color: #fff;
+      border: none;
+      padding: 1em 1em;
+      box-shadow: 0 2px 9px #00fff324;
+      outline: none;
+      transition: box-shadow 0.2s;
+      resize: none;
+      min-height: 90px;
+      font-weight: 500;
+    }
+    .output-box {
+      background: #171b33;
+      border: 2px solid #00f2ff28;
+      font-weight: 800;
+      font-size: 1.13rem;
+      text-shadow: 0 1px 7px #00f8ff17;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+    }
+    .flip-btn {
+      margin: 0 0.4em 1.8em 0.4em;
+      align-self: flex-end;
+      background: linear-gradient(120deg, var(--accent2) 25%, var(--accent) 100%);
+      border: 3.5px solid #15e6ffc7;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      color: #fff;
+      font-size: 2.3rem;
+      box-shadow: 0 2px 16px #33ffd1d7, 0 2px 10px #393c8c6b;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2;
+      outline: none;
+      filter: drop-shadow(0 0 16px #28fffa99);
+      transition: background 0.17s, transform 0.13s;
+    }
+    .flip-btn:active { filter: brightness(1.2) scale(1.07); }
+    .btn-row {
+      display: flex;
+      width: 100%;
+      justify-content: center;
+      gap: 1.1em;
+      margin-top: 1.0em;
+      margin-bottom: 0.25em;
+      flex-wrap: wrap;
+    }
+    .main-btn, .mic-btn, .clear-btn, .speak-btn {
+      padding: 0.78em 1.35em;
+      font-size: 1.07rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 13px;
+      background: linear-gradient(90deg, var(--accent) 30%, var(--accent2) 100%);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 1px 7px #00fff44a;
+      transition: background 0.16s, transform 0.11s;
+      margin-bottom: 0.08em;
+      margin-right: 0.1em;
+      outline: none;
+      font-family: inherit;
+    }
+    .mic-btn {
+      background: linear-gradient(120deg,#00ffd4 10%, #57deff 95%);
+      color: #181c38;
+      font-size: 1.18em;
+      font-weight: 900;
+      box-shadow: 0 0 20px #00ffd7cc;
+    }
+    .speak-btn {
+      background: linear-gradient(120deg, var(--highlight) 40%, var(--accent) 100%);
+      color: #16192c;
+      font-weight: 900;
+      font-size: 1.13em;
+      box-shadow: 0 0 18px #1fffd366;
+    }
+    .clear-btn {
+      background: linear-gradient(120deg, var(--fail) 45%, var(--accent2) 100%);
+      color: #fff;
+      font-weight: 900;
+      box-shadow: 0 0 10px #ff7091aa;
+    }
+    @media (max-width: 950px) {
+      .container { padding: 1.2em 0.5em; }
+      .lang-panel { max-width: 97vw; }
+      .logo-bar img { width: 120px; border-radius: 14px; }
+    }
+    @media (max-width: 800px) {
+      .flip-row {
+        flex-direction: column;
+        gap: 1.4em;
+      }
+      .container {
+        padding: 0.5em 0.2em;
+        border-radius: 0;
+      }
+      .flip-btn {
+        margin: 0.7em auto 0.7em auto;
+        align-self: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-bar">
+    <img src="Logo-ZOX-Robotics-1-1.png" alt="ZOX Robotics Logo" id="zoxLogo">
+  </div>
+  <div class="container">
+    <h2>Nova Translator</h2>
+    <div class="flip-row">
+      <!-- Input language panel -->
+      <div class="lang-panel">
+        <div class="label">Input Language</div>
+        <div class="lang-select-row">
+          <select id="inputLang">
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="zh">Chinese (Simplified)</option>
+            <option value="hi">Hindi</option>
+            <option value="ar">Arabic</option>
+            <option value="ru">Russian</option>
+            <option value="ja">Japanese</option>
+            <option value="pt">Portuguese</option>
+            <option value="it">Italian</option>
+          </select>
+        </div>
+        <textarea id="inputText" placeholder="Type or speak..."></textarea>
+      </div>
+      <!-- Flip button -->
+      <button class="flip-btn" id="flipBtn" title="Swap languages">&#8646;</button>
+      <!-- Output language panel -->
+      <div class="lang-panel">
+        <div class="label">Target Language</div>
+        <div class="lang-select-row">
+          <select id="outputLang">
+            <option value="es">Spanish</option>
+            <option value="en">English</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="zh">Chinese (Simplified)</option>
+            <option value="hi">Hindi</option>
+            <option value="ar">Arabic</option>
+            <option value="ru">Russian</option>
+            <option value="ja">Japanese</option>
+            <option value="pt">Portuguese</option>
+            <option value="it">Italian</option>
+          </select>
+        </div>
+        <div id="translatedText" class="output-box"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="main-btn" id="translateBtn">Translate</button>
+      <button class="mic-btn" id="micBtn" title="Speak Input">🎤</button>
+      <button class="speak-btn" id="speakBtn" title="Speak Output">🔊</button>
+      <button class="clear-btn" id="clearBtn" title="Clear All">Clear</button>
+    </div>
+  </div>
+  <script>
+    // Elements
+    const inputText = document.getElementById('inputText');
+    const inputLang = document.getElementById('inputLang');
+    const outputLang = document.getElementById('outputLang');
+    const translateBtn = document.getElementById('translateBtn');
+    const flipBtn = document.getElementById('flipBtn');
+    const micBtn = document.getElementById('micBtn');
+    const translatedText = document.getElementById('translatedText');
+    const speakBtn = document.getElementById('speakBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    inputLang.value = "en";
+    outputLang.value = "es";
+    const langCodeMap = {
+      en: "en-US", es: "es-ES", fr: "fr-FR", de: "de-DE", zh: "zh-CN", hi: "hi-IN",
+      ar: "ar-SA", ru: "ru-RU", ja: "ja-JP", pt: "pt-PT", it: "it-IT"
+    };
+
+    flipBtn.onclick = () => {
+      const oldInput = inputLang.value;
+      inputLang.value = outputLang.value;
+      outputLang.value = oldInput;
+      const temp = inputText.value;
+      inputText.value = translatedText.innerText;
+      translatedText.innerText = temp;
+      inputText.focus();
+    };
+
+    translateBtn.onclick = async () => {
+      const text = inputText.value.trim();
+      const targetLanguage = outputLang.value;
+      if (!text) {
+        alert('Please enter text to translate.');
+        inputText.focus();
+        return;
+      }
+      try {
+        const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, targetLanguage })
+        });
+        const data = await res.json();
+        if (data.translatedText) {
+          translatedText.innerText = data.translatedText;
+          speak(data.translatedText, targetLanguage);
+        } else {
+          translatedText.innerText = "Translation failed: " + (data.error || "Unknown error");
+        }
+      } catch (err) {
+        translatedText.innerText = "Network or server error: " + err.message;
+      }
+      inputText.focus();
+    };
+
+    // Microphone speech-to-text
+    let micRecognition = null;
+    let micTimer = null;
+    micBtn.onclick = () => {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('Speech recognition not supported in this browser.');
+        return;
+      }
+      micRecognition = new webkitSpeechRecognition();
+      micRecognition.lang = langCodeMap[inputLang.value] || "en-US";
+      micRecognition.interimResults = true;
+      micRecognition.maxAlternatives = 1;
+      let finalTranscript = "";
+      micRecognition.onresult = (event) => {
+        let interimTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        inputText.value = finalTranscript + interimTranscript;
+      };
+      micRecognition.onerror = (event) => {
+        if (micTimer) clearTimeout(micTimer);
+        alert('Speech recognition error: ' + event.error);
+      };
+      micRecognition.onend = () => {
+        if (micTimer) clearTimeout(micTimer);
+        micTimer = setTimeout(() => {
+          if (inputText.value.trim()) {
+            translateBtn.onclick();
+          }
+        }, 5000);
+      };
+      micRecognition.start();
+    };
+
+    // Speak output
+    function speak(text, lang) {
+      if ('speechSynthesis' in window && text) {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = langCodeMap[lang] || lang || "en-US";
+        utter.rate = 1.01;
+        utter.volume = 1;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utter);
+      }
+    }
+    speakBtn.onclick = () => {
+      speak(translatedText.innerText, outputLang.value);
+    };
+
+    clearBtn.onclick = () => {
+      inputText.value = '';
+      translatedText.innerText = '';
+      inputText.focus();
+    };
+  </script>
+</body>
+</html>
