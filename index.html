@@ -301,16 +301,23 @@
       ar: "ar-SA", ru: "ru-RU", ja: "ja-JP", pt: "pt-PT", it: "it-IT"
     };
 
+    // Flip handler: only swap language selectors and text, then clear translation
     flipBtn.onclick = () => {
+      // Swap selected languages
       const oldInput = inputLang.value;
       inputLang.value = outputLang.value;
       outputLang.value = oldInput;
-      const temp = inputText.value;
-      inputText.value = translatedText.innerText;
-      translatedText.innerText = temp;
+
+      // Swap the box values only (no chaining translation)
+      const tempInput = inputText.value;
+      inputText.value = translatedText.textContent || "";
+      translatedText.textContent = "";
+
+      // Optionally, swap the panel focus
       inputText.focus();
     };
 
+    // Translate handler: always translate only the input box
     translateBtn.onclick = async () => {
       const text = inputText.value.trim();
       const targetLanguage = outputLang.value;
@@ -319,6 +326,8 @@
         inputText.focus();
         return;
       }
+      // Clear previous translation
+      translatedText.textContent = '';
       try {
         const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
           method: 'POST',
@@ -327,13 +336,13 @@
         });
         const data = await res.json();
         if (data.translatedText) {
-          translatedText.innerText = data.translatedText;
+          translatedText.textContent = data.translatedText;
           speak(data.translatedText, targetLanguage);
         } else {
-          translatedText.innerText = "Translation failed: " + (data.error || "Unknown error");
+          translatedText.textContent = "Translation failed: " + (data.error || "Unknown error");
         }
       } catch (err) {
-        translatedText.innerText = "Network or server error: " + err.message;
+        translatedText.textContent = "Network or server error: " + err.message;
       }
       inputText.focus();
     };
@@ -389,12 +398,12 @@
       }
     }
     speakBtn.onclick = () => {
-      speak(translatedText.innerText, outputLang.value);
+      speak(translatedText.textContent, outputLang.value);
     };
 
     clearBtn.onclick = () => {
       inputText.value = '';
-      translatedText.innerText = '';
+      translatedText.textContent = '';
       inputText.focus();
     };
   </script>
