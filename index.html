@@ -4,230 +4,111 @@
   <meta charset="UTF-8">
   <title>Nova Translator | ZOX Robotics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="zox-logo.png">
+  <meta name="theme-color" content="#21c8ff"/>
   <style>
-    :root {
-      --accent: #21c8ff;
-      --accent2: #ff6ae7;
-      --panel: #181c38;
-      --surface: #232a3a;
-      --text: #fff;
-      --highlight: #2cffb9;
-      --fail: #ff607a;
-    }
+    html, body { margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #232a3a 0%, #3b527b 100%);
-      color: var(--text);
-      margin: 0;
+      background: linear-gradient(135deg, #2dd2ff 0%, #9447ff 100%);
       min-height: 100vh;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
+      padding: 0;
     }
     .logo-bar {
-      width: 100vw;
-      display: flex;
-      justify-content: center;
-      margin-top: 2em;
-      margin-bottom: 0.5em;
+      margin-top: 1.7em; margin-bottom: 0.5em; width: 100vw; display: flex; justify-content: center;
     }
-    .logo-bar img {
-      width: 180px;
-      height: auto;
-      object-fit: contain;
-      box-shadow: 0 2px 12px #13f5ff66;
-      border-radius: 16px;
-      border: 2.5px solid #10c6ff88;
-      background: #fff;
-      padding: 0.4em 1.5em 0.2em 1.5em;
-    }
+    .logo-bar img { width: 150px; border-radius: 16px; box-shadow: 0 2px 12px #13f5ff66; background: #fff; padding: 0.3em 1.2em 0.1em 1.2em; }
     .container {
-      max-width: 820px;
-      width: 98vw;
-      background: var(--panel);
-      border-radius: 32px;
-      box-shadow: 0 10px 32px #00a2ff55, 0 3px 24px #0004;
-      padding: 2.5em 2.1em 2.2em 2.1em;
+      width: 97vw; max-width: 800px;
+      background: rgba(15,22,60,0.97);
+      border-radius: 36px;
+      box-shadow: 0 8px 40px #00fff355, 0 4px 16px #0005;
+      padding: 2.6em 2.1em 2em 2.1em;
       margin: 0 auto;
       border: 2.5px solid #21c8ff33;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: flex; flex-direction: column; align-items: center;
     }
     h2 {
-      font-size: 2.2rem;
-      margin-bottom: 1.2em;
-      font-weight: 900;
-      letter-spacing: 2.3px;
-      background: linear-gradient(90deg, var(--accent) 23%, var(--accent2) 87%);
+      font-size: 2.4rem; font-weight: 900; margin-bottom: 1em;
+      letter-spacing: 2.7px;
+      background: linear-gradient(90deg, #21c8ff 13%, #ff6ae7 93%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-top: 0;
       text-align: center;
-      text-shadow: 0 4px 18px #09ffe3a2;
+      text-shadow: 0 6px 30px #1ed2ffc2;
+      margin-top: 0;
     }
     .flip-row {
-      display: flex;
-      width: 100%;
-      gap: 1.2em;
-      align-items: flex-end;
-      justify-content: center;
-      margin-bottom: 1.1em;
+      display: flex; width: 100%; gap: 1.5em; align-items: flex-end; justify-content: center; margin-bottom: 1.2em;
     }
     .lang-panel {
-      flex: 1;
-      min-width: 290px;
-      max-width: 340px;
-      background: linear-gradient(120deg, #222a45 60%, #242a5c 100%);
-      padding: 1.1em 1.1em 1.25em 1.1em;
-      border-radius: 22px;
-      box-shadow: 0 2px 12px #13f7ff24;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      border: 2px solid #5ad0fd33;
-      min-height: 210px;
+      flex: 1; min-width: 230px; max-width: 360px;
+      background: linear-gradient(115deg, #232a55 60%, #382a67 100%);
+      padding: 1.1em 1.2em 1.2em 1.2em;
+      border-radius: 26px;
+      box-shadow: 0 2px 16px #4ff9ff25;
+      display: flex; flex-direction: column;
+      border: 2.5px solid #5ad0fd38;
+      min-height: 180px;
     }
-    .label {
-      color: var(--highlight);
-      font-weight: 700;
-      font-size: 1.1rem;
-      margin-bottom: 0.35em;
-      letter-spacing: 0.03em;
-      text-shadow: 0 2px 8px #12fff9a0;
-    }
-    .lang-select-row {
-      display: flex;
-      gap: 0.4em;
-      align-items: center;
-      margin-bottom: 0.3em;
-    }
+    .label { color: #2cffb9; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35em; letter-spacing: 0.02em; text-shadow: 0 1px 7px #12fff99e; }
+    .lang-select-row { display: flex; gap: 0.3em; align-items: center; margin-bottom: 0.3em; }
     select {
-      flex: 1;
-      padding: 0.4em 0.9em;
-      border-radius: 11px;
-      border: 1.7px solid #28f3e988;
-      background: #232e48;
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 700;
-      outline: none;
+      flex: 1; padding: 0.4em 0.8em; border-radius: 11px; border: 1.7px solid #28f3e988;
+      background: #232e48; color: #fff; font-size: 1rem; font-weight: 700; outline: none;
     }
     textarea, .output-box {
-      width: 100%;
-      margin: 0.12em auto 0.1em auto;
-      border-radius: 14px;
-      font-size: 1.13rem;
-      background: #232a3a;
-      color: #fff;
-      border: none;
-      padding: 1em 1em;
-      box-shadow: 0 2px 9px #00fff324;
-      outline: none;
-      transition: box-shadow 0.2s;
-      resize: none;
-      min-height: 90px;
+      width: 100%; margin: 0.12em auto 0.1em auto; border-radius: 13px;
+      font-size: 1.13rem; background: #192241; color: #fff;
+      border: none; padding: 1em 1em; box-shadow: 0 2px 10px #00fff324;
+      outline: none; transition: box-shadow 0.2s; resize: none; min-height: 82px;
       font-weight: 500;
     }
     .output-box {
-      background: #171b33;
-      border: 2px solid #00f2ff28;
-      font-weight: 800;
-      font-size: 1.13rem;
-      text-shadow: 0 1px 7px #00f8ff17;
-      min-height: 90px;
-      display: flex;
-      align-items: center;
+      background: #171b33; border: 2px solid #00f2ff28; font-weight: 800; text-shadow: 0 1px 7px #00f8ff13;
+      min-height: 82px; display: flex; align-items: center; font-size: 1.16rem;
     }
     .flip-btn {
-      margin: 0 0.4em 1.8em 0.4em;
-      align-self: flex-end;
-      background: linear-gradient(120deg, var(--accent2) 25%, var(--accent) 100%);
-      border: 3.5px solid #15e6ffc7;
-      border-radius: 50%;
-      width: 56px;
-      height: 56px;
-      color: #fff;
-      font-size: 2.3rem;
-      box-shadow: 0 2px 16px #33ffd1d7, 0 2px 10px #393c8c6b;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      z-index: 2;
-      outline: none;
-      filter: drop-shadow(0 0 16px #28fffa99);
-      transition: background 0.17s, transform 0.13s;
+      margin: 0 0.4em 1.9em 0.4em; align-self: flex-end;
+      background: linear-gradient(120deg, #ff6ae7 25%, #21c8ff 100%);
+      border: 3px solid #15e6ffc2; border-radius: 50%; width: 56px; height: 56px;
+      color: #fff; font-size: 2.3rem; box-shadow: 0 2px 18px #33ffd1cf, 0 2px 10px #393c8c79;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      filter: drop-shadow(0 0 16px #28fffa80); transition: background 0.18s, transform 0.15s;
     }
-    .flip-btn:active { filter: brightness(1.2) scale(1.07); }
-    .btn-row {
-      display: flex;
-      width: 100%;
-      justify-content: center;
-      gap: 1.1em;
-      margin-top: 1.0em;
-      margin-bottom: 0.25em;
-      flex-wrap: wrap;
-    }
+    .flip-btn:active { filter: brightness(1.15) scale(1.07); }
+    .btn-row { display: flex; width: 100%; justify-content: center; gap: 1em; margin-top: 1em; margin-bottom: 0.25em; flex-wrap: wrap; }
     .main-btn, .mic-btn, .clear-btn, .speak-btn {
-      padding: 0.78em 1.35em;
-      font-size: 1.07rem;
-      font-weight: 800;
-      border: none;
-      border-radius: 13px;
-      background: linear-gradient(90deg, var(--accent) 30%, var(--accent2) 100%);
-      color: #fff;
-      cursor: pointer;
-      box-shadow: 0 1px 7px #00fff44a;
-      transition: background 0.16s, transform 0.11s;
-      margin-bottom: 0.08em;
-      margin-right: 0.1em;
-      outline: none;
-      font-family: inherit;
+      padding: 0.75em 1.23em; font-size: 1.07rem; font-weight: 800;
+      border: none; border-radius: 13px;
+      background: linear-gradient(90deg, #21c8ff 33%, #ff6ae7 100%);
+      color: #fff; cursor: pointer; box-shadow: 0 1px 7px #00fff44a;
+      transition: background 0.18s, transform 0.11s; margin-bottom: 0.08em; margin-right: 0.09em; outline: none; font-family: inherit;
     }
-    .mic-btn {
-      background: linear-gradient(120deg,#00ffd4 10%, #57deff 95%);
-      color: #181c38;
-      font-size: 1.18em;
-      font-weight: 900;
-      box-shadow: 0 0 20px #00ffd7cc;
-    }
-    .speak-btn {
-      background: linear-gradient(120deg, var(--highlight) 40%, var(--accent) 100%);
-      color: #16192c;
-      font-weight: 900;
-      font-size: 1.13em;
-      box-shadow: 0 0 18px #1fffd366;
-    }
-    .clear-btn {
-      background: linear-gradient(120deg, var(--fail) 45%, var(--accent2) 100%);
-      color: #fff;
-      font-weight: 900;
-      box-shadow: 0 0 10px #ff7091aa;
-    }
+    .mic-btn { background: linear-gradient(120deg,#2cffb9 10%, #21c8ff 85%); color: #181c38; font-size: 1.2em; font-weight: 900; box-shadow: 0 0 14px #00ffd7bb; }
+    .speak-btn { background: linear-gradient(120deg, #ffd52c 40%, #21c8ff 100%); color: #191b2d; font-weight: 900; font-size: 1.13em; box-shadow: 0 0 15px #a7f61b66; }
+    .clear-btn { background: linear-gradient(120deg, #ff607a 55%, #ff6ae7 100%); color: #fff; font-weight: 900; box-shadow: 0 0 9px #ff7091a9; }
     @media (max-width: 950px) {
-      .container { padding: 1.2em 0.5em; }
+      .container { padding: 1.1em 0.4em; }
       .lang-panel { max-width: 97vw; }
-      .logo-bar img { width: 120px; border-radius: 14px; }
+      .logo-bar img { width: 115px; }
     }
     @media (max-width: 800px) {
-      .flip-row {
-        flex-direction: column;
-        gap: 1.4em;
-      }
-      .container {
-        padding: 0.5em 0.2em;
-        border-radius: 0;
-      }
-      .flip-btn {
-        margin: 0.7em auto 0.7em auto;
-        align-self: center;
-      }
+      .flip-row { flex-direction: column; gap: 1.3em; }
+      .container { padding: 0.5em 0.2em; border-radius: 0; }
+      .flip-btn { margin: 0.7em auto 0.7em auto; align-self: center; }
     }
   </style>
 </head>
 <body>
   <div class="logo-bar">
-    <img src="Logo-ZOX-Robotics-1-1.png" alt="ZOX Robotics Logo" id="zoxLogo">
+    <img src="zox-logo.png" alt="ZOX Robotics Logo" id="zoxLogo">
   </div>
   <div class="container">
     <h2>Nova Translator</h2>
@@ -293,60 +174,52 @@
     const translatedText = document.getElementById('translatedText');
     const speakBtn = document.getElementById('speakBtn');
     const clearBtn = document.getElementById('clearBtn');
-
     inputLang.value = "en";
     outputLang.value = "es";
     const langCodeMap = {
       en: "en-US", es: "es-ES", fr: "fr-FR", de: "de-DE", zh: "zh-CN", hi: "hi-IN",
       ar: "ar-SA", ru: "ru-RU", ja: "ja-JP", pt: "pt-PT", it: "it-IT"
     };
-
-    // Flip handler: only swap language selectors and text, then clear translation
+    // Flip logic
     flipBtn.onclick = () => {
-      // Swap selected languages
       const oldInput = inputLang.value;
       inputLang.value = outputLang.value;
       outputLang.value = oldInput;
-
-      // Swap the box values only (no chaining translation)
-      const tempInput = inputText.value;
-      inputText.value = translatedText.textContent || "";
-      translatedText.textContent = "";
-
-      // Optionally, swap the panel focus
+      const temp = inputText.value;
+      inputText.value = translatedText.innerText;
+      translatedText.innerText = temp;
       inputText.focus();
     };
-
-    // Translate handler: always translate only the input box
+    // Translate
     translateBtn.onclick = async () => {
       const text = inputText.value.trim();
+      const sourceLanguage = inputLang.value;
       const targetLanguage = outputLang.value;
+      translatedText.innerText = ""; // Clear previous output first
       if (!text) {
         alert('Please enter text to translate.');
         inputText.focus();
         return;
       }
-      // Clear previous translation
-      translatedText.textContent = '';
       try {
         const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, targetLanguage })
+          body: JSON.stringify({ text, sourceLanguage, targetLanguage })
         });
         const data = await res.json();
         if (data.translatedText) {
-          translatedText.textContent = data.translatedText;
-          speak(data.translatedText, targetLanguage);
+          translatedText.innerText = data.translatedText;
+          // Optionally, auto-speak:
+          // speak(data.translatedText, targetLanguage);
         } else {
-          translatedText.textContent = "Translation failed: " + (data.error || "Unknown error");
+          translatedText.innerText = "Translation failed: " + (data.error || "Unknown error");
         }
       } catch (err) {
-        translatedText.textContent = "Network or server error: " + err.message;
+        translatedText.innerText = "Network or server error: " + err.message;
       }
       inputText.focus();
     };
-
     // Microphone speech-to-text
     let micRecognition = null;
     let micTimer = null;
@@ -381,31 +254,33 @@
           if (inputText.value.trim()) {
             translateBtn.onclick();
           }
-        }, 5000);
+        }, 600); // quicker auto after speech
       };
       micRecognition.start();
     };
-
     // Speak output
     function speak(text, lang) {
       if ('speechSynthesis' in window && text) {
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = langCodeMap[lang] || lang || "en-US";
-        utter.rate = 1.01;
+        utter.rate = 1.02;
         utter.volume = 1;
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utter);
       }
     }
     speakBtn.onclick = () => {
-      speak(translatedText.textContent, outputLang.value);
+      speak(translatedText.innerText, outputLang.value);
     };
-
     clearBtn.onclick = () => {
       inputText.value = '';
-      translatedText.textContent = '';
+      translatedText.innerText = '';
       inputText.focus();
     };
+    // PWA install prompt
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
   </script>
 </body>
 </html>
