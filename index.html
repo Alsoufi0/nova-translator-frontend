@@ -39,6 +39,7 @@
       -webkit-text-fill-color: transparent;
       font-size: 1.8rem;
     }
+    #log { text-align: center; margin-bottom: 1rem; color: var(--highlight); min-height: 1.2em; }
     .row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
     select, textarea {
       flex: 1;
@@ -57,11 +58,7 @@
       min-height: 80px;
       margin-bottom: 1rem;
     }
-    .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
+    .buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
     button {
       flex: 1;
       padding: 0.75rem;
@@ -74,15 +71,8 @@
       transition: background 0.2s;
     }
     button.secondary { background: var(--secondary); }
-    button.highlight { background: var(--highlight); color: var(--bg); }
+    button.highlight { background: var(--highlight); color: var(--panel); }
     button:hover { opacity: 0.9; }
-    #log {
-      text-align: center;
-      margin-bottom: 1rem;
-      font-style: italic;
-      color: var(--highlight);
-      min-height: 1.2em;
-    }
   </style>
 </head>
 <body>
@@ -93,7 +83,7 @@
       <select id="inputLang"></select>
       <select id="outputLang"></select>
     </div>
-    <textarea id="inputText" placeholder="Enter text or use mic..."></textarea>
+    <textarea id="inputText" placeholder="..." ></textarea>
     <div id="output"></div>
     <div class="buttons">
       <button id="translateBtn">Translate</button>
@@ -119,88 +109,114 @@
     const langCodes = { en:'en-US', es:'es-ES', fr:'fr-FR', de:'de-DE', it:'it-IT', ru:'ru-RU', ja:'ja-JP', zh:'zh-CN', hi:'hi-IN', ar:'ar-SA', pt:'pt-PT' };
 
     Object.entries(languages).forEach(([code,name])=>{
-      inputLang.innerHTML+=`<option value="${code}">${name}</option>`;
-      outputLang.innerHTML+=`<option value="${code}">${name}</option>`;
+      inputLang.innerHTML += `<option value="${code}">${name}</option>`;
+      outputLang.innerHTML += `<option value="${code}">${name}</option>`;
     });
-    inputLang.value='en';
-    outputLang.value='es';
+    inputLang.value = 'en';
+    outputLang.value = 'es';
 
-    function speak(text,lang){
-      if(!window.speechSynthesis) return;
-      const u=new SpeechSynthesisUtterance(text);
-      u.lang=langCodes[lang]||'en-US';
+    function speak(text, lang) {
+      if (!window.speechSynthesis) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = langCodes[lang] || 'en-US';
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
     }
 
-    async function translate(text){
-      try{
-        const res=await fetch('https://nova-translator-backend.onrender.com/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,targetLanguage:outputLang.value})});
-        const j=await res.json();
-        return j.translatedText||'Error';
-      }catch{ return 'Error'; }
+    async function translate(text) {
+      try {
+        const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, targetLanguage: outputLang.value })
+        });
+        const j = await res.json();
+        return j.translatedText;
+      } catch {
+        return 'Error';
+      }
     }
 
-    translateBtn.onclick=async()=>{
-      const txt=inputText.value.trim(); if(!txt) return;
-      logEl.textContent='Translating...';
-      const out=await translate(txt);
-      outputEl.textContent=out;
-      speak(out,outputLang.value);
-      logEl.textContent='Done';
+    translateBtn.onclick = async () => {
+      const t = inputText.value.trim(); if (!t) return;
+      logEl.textContent = 'Translating...';
+      const out = await translate(t);
+      outputEl.textContent = out;
+      speak(out, outputLang.value);
+      logEl.textContent = 'Ready';
     };
 
-    micBtn.onclick=()=>{
-      if(!('webkitSpeechRecognition' in window)) return;
-      const r=new webkitSpeechRecognition();
-      r.lang=langCodes[inputLang.value]; r.interimResults=false;
-      r.onresult=e=>{ inputText.value=e.results[0][0].transcript; translateBtn.click(); };
+    micBtn.onclick = () => {
+      if (!('webkitSpeechRecognition' in window)) { return; }
+      const r = new webkitSpeechRecognition();
+      r.lang = langCodes[inputLang.value];
+      r.interimResults = false;
+      r.onresult = e => {
+        inputText.value = e.results[0][0].transcript;
+        translateBtn.click();
+      };
       r.start();
     };
 
-    speakBtn.onclick=()=>speak(outputEl.textContent,outputLang.value);
-
-    clearBtn.onclick=()=>{ inputText.value=''; outputEl.textContent=''; logEl.textContent='Ready'; };
-
-    let rec, state='init';
-    assistantBtn.onclick=()=>{
-      if(state!=='init') return;
-      state='setLang'; logEl.textContent='Listening for languages...';
-      speak('Which languages do you want to translate from and to?');
-      listen();
+    speakBtn.onclick = () => {
+      speak(outputEl.textContent, outputLang.value);
     };
 
-    function listen(){
-      rec=new webkitSpeechRecognition(); rec.lang='en-US'; rec.interimResults=false;
-      rec.onresult=async e=>{
-        const t=e.results[0][0].transcript.trim().toLowerCase();
-        if(state==='setLang'){
-          const m=t.match(/(?:from )?([a-z]+) to ([a-z]+)/);
-          if(m&&languages[m[1]]&&languages[m[2]]){
-            inputLang.value=m[1]; outputLang.value=m[2];
-            logEl.textContent=`From ${languages[m[1]]} to ${languages[m[2]]}`;
-            speak(`Translating from ${languages[m[1]]} to ${languages[m[2]]}. What would you like to translate?`,m[1]);
-            state='ready';
-            setTimeout(listen,2000);
-          }else{
-            speak('Please say for example from Italian to Spanish'); setTimeout(listen,2000);
-          }
-        } else if(state==='ready'){
-          if(/change/.test(t)){
-            state='setLang'; speak('Which languages?'); setTimeout(listen,2000);
-          } else if(/stop/.test(t)){
-            speak('Stopping assistant'); state='init'; logEl.textContent='Ready';
-          } else {
-            const out=await translate(t);
-            inputText.value=t; outputEl.textContent=out; speak(out,outputLang.value);
-            logEl.textContent='Done';
-            setTimeout(()=>{speak('Say next or change or stop'); state='ready'; listen();},3000);
-          }
+    clearBtn.onclick = () => {
+      inputText.value = '';
+      outputEl.textContent = '';
+      logEl.textContent = 'Ready';
+    };
+
+    const rec = new webkitSpeechRecognition();
+    rec.lang = 'en-US';
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    let state = 'init'; // init, setLang, ready
+
+    rec.onresult = async e => {
+      const txt = e.results[0][0].transcript.trim().toLowerCase();
+      if (state === 'setLang') {
+        const m = txt.match(/(?:from )?([a-z]+) to ([a-z]+)/);
+        if (m && languages[m[1]] && languages[m[2]]) {
+          inputLang.value = m[1];
+          outputLang.value = m[2];
+          logEl.textContent = `From ${languages[m[1]]} to ${languages[m[2]]}`;
+          speak(`Translating from ${languages[m[1]]} to ${languages[m[2]]}. What would you like to translate?`, m[1]);
+          state = 'ready';
+        } else {
+          speak('Please say for example from Italian to Spanish');
         }
-      };
-      rec.onend=()=>{ if(state!=='init'){} };
+      } else if (state === 'ready') {
+        if (/change/.test(txt)) {
+          state = 'setLang';
+          speak('Which languages?');
+        } else if (/stop/.test(txt)) {
+          state = 'init';
+          logEl.textContent = 'Ready';
+          speak('Stopping assistant');
+        } else {
+          logEl.textContent = 'Translating...';
+          const out = await translate(txt);
+          inputText.value = txt;
+          outputEl.textContent = out;
+          speak(out, outputLang.value);
+          logEl.textContent = 'Ready';
+        }
+      }
+    };
+
+    rec.onend = () => {
+      if (state !== 'init') rec.start();
+    };
+
+    assistantBtn.onclick = () => {
+      if (state !== 'init') return;
+      state = 'setLang';
+      logEl.textContent = 'Listening for languages...';
+      speak('Which languages do you want to translate from and to?');
       rec.start();
-    }
+    };
   </script>
 </body>
 </html>
