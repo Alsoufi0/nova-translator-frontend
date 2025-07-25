@@ -139,7 +139,7 @@
       margin-bottom: 0.3em;
       flex-wrap: wrap;
     }
-    .assistant-btn {
+    .main-btn, .mic-btn, .clear-btn, .speak-btn, .assistant-btn {
       padding: 0.72em 1.2em;
       font-size: 1.07rem;
       font-weight: 800;
@@ -154,6 +154,27 @@
       font-family: inherit;
       margin-bottom: 0.08em;
       margin-right: 0.1em;
+    }
+    .main-btn { background: linear-gradient(90deg, #21c8ff 30%, #ff6ae7 100%); }
+    .mic-btn {
+      background: linear-gradient(120deg,#00ffd4 10%, #57deff 95%);
+      color: #181c38;
+      font-size: 1.16em;
+      font-weight: 900;
+      box-shadow: 0 0 20px #00ffd7cc;
+    }
+    .speak-btn {
+      background: linear-gradient(120deg, #2cffb9 40%, #21c8ff 100%);
+      color: #16192c;
+      font-weight: 900;
+      font-size: 1.13em;
+      box-shadow: 0 0 18px #1fffd366;
+    }
+    .clear-btn {
+      background: linear-gradient(120deg, #ff607a 45%, #ff6ae7 100%);
+      color: #fff;
+      font-weight: 900;
+      box-shadow: 0 0 10px #ff7091aa;
     }
     .assistant-btn.active {
       background: linear-gradient(90deg, #38ff98 30%, #0ff4fa 100%);
@@ -214,6 +235,10 @@
       </div>
     </div>
     <div class="btn-row">
+      <button class="main-btn" id="translateBtn">Translate</button>
+      <button class="mic-btn" id="micBtn" title="Speak Input">🎤</button>
+      <button class="speak-btn" id="speakBtn" title="Speak Output">🔊</button>
+      <button class="clear-btn" id="clearBtn" title="Clear All">Clear</button>
       <button class="assistant-btn" id="assistantBtn">Start Assistant</button>
     </div>
   </div>
@@ -230,12 +255,100 @@
     const outputLang = document.getElementById('outputLang');
     const inputText = document.getElementById('inputText');
     const translatedText = document.getElementById('translatedText');
+    const translateBtn = document.getElementById('translateBtn');
+    const micBtn = document.getElementById('micBtn');
+    const speakBtn = document.getElementById('speakBtn');
+    const clearBtn = document.getElementById('clearBtn');
     const assistantBtn = document.getElementById('assistantBtn');
 
     let recognition = null;
     let isListening = false;
     let botState = 'init';
 
+    // ---- Manual translation ----
+    translateBtn.onclick = translateAndSpeak;
+
+    async function translateAndSpeak() {
+      const text = inputText.value.trim();
+      const targetLanguage = outputLang.value;
+      translatedText.innerText = "";
+      if (!text) {
+        alert("Please enter text to translate.");
+        inputText.focus();
+        return;
+      }
+      try {
+        const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, targetLanguage })
+        });
+        const data = await res.json();
+        if (data.translatedText) {
+          translatedText.innerText = data.translatedText;
+          speak(data.translatedText, targetLanguage);
+        } else {
+          translatedText.innerText = "Translation failed: " + (data.error || "Unknown error");
+          speak("Sorry, translation failed.", inputLang.value);
+        }
+      } catch (err) {
+        translatedText.innerText = "Network or server error: " + err.message;
+        speak("Sorry, network or server error.", inputLang.value);
+      }
+    }
+
+    // ---- Mic (manual input) ----
+    micBtn.onclick = () => {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('Speech recognition not supported in this browser.');
+        return;
+      }
+      if (recognition) recognition.abort();
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = langCodeMap[inputLang.value] || "en-US";
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      let finalTranscript = "";
+      recognition.onresult = (event) => {
+        let interimTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+          else interimTranscript += event.results[i][0].transcript;
+        }
+        inputText.value = finalTranscript + interimTranscript;
+      };
+      recognition.onerror = (event) => {
+        alert('Speech recognition error: ' + event.error);
+      };
+      recognition.onend = () => {
+        if (inputText.value.trim()) translateAndSpeak();
+      };
+      recognition.start();
+    };
+
+    // ---- Speak output ----
+    speakBtn.onclick = () => {
+      speak(translatedText.innerText, outputLang.value);
+    };
+    function speak(text, lang = "en") {
+      if ('speechSynthesis' in window && text) {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = langCodeMap[lang] || lang || "en-US";
+        utter.rate = 1.03;
+        utter.volume = 1;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    // ---- Clear ----
+    clearBtn.onclick = () => {
+      inputText.value = '';
+      translatedText.innerText = '';
+      inputText.focus();
+    };
+
+    // ---- Assistant Bot Mode ----
     assistantBtn.onclick = () => {
       if (isListening) stopAssistant();
       else startAssistant();
@@ -321,65 +434,4 @@
         /from ([a-z\s]+) to ([a-z\s]+)/i,
         /([a-z\s]+) to ([a-z\s]+)/i,
         /from ([a-z\s]+) into ([a-z\s]+)/i,
-        /([a-z\s]+) into ([a-z\s]+)/i
-      ];
-      for (let rgx of regexes) {
-        let match = txt.match(rgx);
-        if (match) {
-          let fromRaw = match[1].trim(), toRaw = match[2].trim();
-          let fromCode = findLangCode(fromRaw);
-          let toCode = findLangCode(toRaw);
-          if (fromCode && toCode) {
-            inputLang.value = fromCode;
-            outputLang.value = toCode;
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    function findLangCode(raw) {
-      raw = raw.toLowerCase();
-      for (const [code, name] of Object.entries(langMap)) {
-        if (name.toLowerCase().includes(raw) || raw.includes(name.toLowerCase())) return code;
-      }
-      return null;
-    }
-
-    async function translateAndSpeak() {
-      const text = inputText.value.trim();
-      const targetLanguage = outputLang.value;
-      translatedText.innerText = "";
-      if (!text) return;
-      try {
-        const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, targetLanguage })
-        });
-        const data = await res.json();
-        if (data.translatedText) {
-          translatedText.innerText = data.translatedText;
-          speak(data.translatedText, targetLanguage);
-        } else {
-          translatedText.innerText = "Translation failed: " + (data.error || "Unknown error");
-          speak("Sorry, translation failed.", inputLang.value);
-        }
-      } catch (err) {
-        translatedText.innerText = "Network or server error: " + err.message;
-        speak("Sorry, network or server error.", inputLang.value);
-      }
-    }
-    function speak(text, lang = "en") {
-      if ('speechSynthesis' in window && text) {
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = langCodeMap[lang] || lang || "en-US";
-        utter.rate = 1.03;
-        utter.volume = 1;
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utter);
-      }
-    }
-  </script>
-</body>
-</html>
+       
