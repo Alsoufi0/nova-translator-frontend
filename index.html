@@ -363,6 +363,10 @@
       return /assistance/i.test(text || "");
     }
   
+    function isStopCommand(text) {
+      return /stop (assistant|listening|bot|translating|translation)/i.test(text || "");
+    }
+  
     async function handleAssistance() {
       if (!isListening) return;
       speak("Do you need anything else?", inputLang.value, async () => {
@@ -423,7 +427,7 @@
         await handleAssistance();
         return;
       }
-      if (/stop (assistant|listening|bot)/i.test(heard)) {
+      if (isStopCommand(heard)) {
         speak("Stopping assistant. Goodbye.", inputLang.value);
         stopAssistant();
         return;
@@ -447,7 +451,7 @@
         await handleAssistance();
         return;
       }
-      if (/stop (assistant|listening|bot)/i.test(heard)) {
+      if (isStopCommand(heard)) {
         speak("Stopping assistant. Goodbye.", inputLang.value);
         stopAssistant();
         return;
@@ -494,7 +498,6 @@
           }
         }
       }
-      // Also support simple "<from> <to>" or "<from> and <to>"
       let found = str.match(/([a-z]+)\s*(to|into|and)\s*([a-z]+)/);
       if (found && found[1] && found[3]) {
         let from = null, to = null;
@@ -595,6 +598,7 @@
       }
     });
   </script>
+  
   
   
 </body>
