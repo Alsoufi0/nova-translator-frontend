@@ -5,169 +5,198 @@
   <title>Nova Translator | ZOX Robotics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* [trimmed for clarity] Full clean vibrant CSS with layout, logo, colors, button visibility, etc. */
-    /* Will include when code is too long here */
+    :root {
+      --accent: #21c8ff;
+      --accent2: #ff6ae7;
+      --panel: #181c38;
+      --surface: #232a3a;
+      --text: #fff;
+      --highlight: #2cffb9;
+      --fail: #ff607a;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #232a3a 0%, #3b527b 100%);
+      color: var(--text);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .container {
+      max-width: 620px;
+      width: 100%;
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 2em;
+      margin-top: 2em;
+      box-shadow: 0 10px 32px #00a2ff55, 0 3px 24px #0004;
+    }
+    h2 {
+      text-align: center;
+      font-size: 2em;
+      margin-bottom: 1em;
+      color: var(--highlight);
+    }
+    label {
+      display: block;
+      margin: 0.8em 0 0.3em;
+      font-weight: bold;
+      color: var(--accent);
+    }
+    select, textarea, button {
+      width: 100%;
+      padding: 0.6em;
+      border-radius: 10px;
+      border: none;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    select {
+      background-color: #2e3552;
+      color: white;
+    }
+    textarea {
+      background-color: #2e3552;
+      color: white;
+      resize: none;
+      min-height: 100px;
+    }
+    .btn-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1em;
+      gap: 0.5em;
+      flex-wrap: wrap;
+    }
+    .btn-row button {
+      flex: 1;
+      background: var(--accent);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #translatedText {
+      margin-top: 1em;
+      padding: 0.8em;
+      background: #171b33;
+      border-radius: 10px;
+      min-height: 80px;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
-  <div class="logo-bar">
-    <img src="Logo-ZOX-Robotics-1-1.png" alt="ZOX Robotics Logo">
-  </div>
   <div class="container">
     <h2>Nova Translator</h2>
-    <div class="flip-row">
-      <div class="lang-panel">
-        <div class="label">Input Language</div>
-        <select id="inputLang"></select>
-        <textarea id="inputText" placeholder="Type or speak..."></textarea>
-      </div>
-      <div class="lang-panel">
-        <div class="label">Target Language</div>
-        <select id="outputLang"></select>
-        <div id="translatedText" class="output-box"></div>
-      </div>
-    </div>
+    <label for="inputLang">Input Language:</label>
+    <select id="inputLang"></select>
+    <label for="outputLang">Target Language:</label>
+    <select id="outputLang"></select>
+    <label for="inputText">Enter text or speak:</label>
+    <textarea id="inputText"></textarea>
     <div class="btn-row">
       <button id="translateBtn">Translate</button>
-      <button id="micBtn">🎤 Speak</button>
-      <button id="speakBtn">🔊 Read</button>
+      <button id="micBtn">🎤 Mic</button>
+      <button id="speakBtn">🔊 Speak</button>
       <button id="clearBtn">Clear</button>
-      <button id="assistantBtn">Start Assistant</button>
+      <button id="assistantBtn">Assistant</button>
     </div>
+    <div id="translatedText"></div>
   </div>
   <script>
+    const inputText = document.getElementById('inputText');
     const inputLang = document.getElementById('inputLang');
     const outputLang = document.getElementById('outputLang');
-    const inputText = document.getElementById('inputText');
-    const translatedText = document.getElementById('translatedText');
     const translateBtn = document.getElementById('translateBtn');
     const micBtn = document.getElementById('micBtn');
     const speakBtn = document.getElementById('speakBtn');
     const clearBtn = document.getElementById('clearBtn');
     const assistantBtn = document.getElementById('assistantBtn');
+    const translatedText = document.getElementById('translatedText');
 
-    const langMap = {
-      en: 'English', es: 'Spanish', fr: 'French', de: 'German', it: 'Italian',
-      ru: 'Russian', ja: 'Japanese', zh: 'Chinese', hi: 'Hindi', ar: 'Arabic', pt: 'Portuguese'
+    const languages = {
+      en: 'English', es: 'Spanish', fr: 'French', de: 'German', zh: 'Chinese',
+      hi: 'Hindi', ar: 'Arabic', ru: 'Russian', ja: 'Japanese', pt: 'Portuguese', it: 'Italian'
     };
+
     const langCodeMap = {
-      en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', it: 'it-IT',
-      ru: 'ru-RU', ja: 'ja-JP', zh: 'zh-CN', hi: 'hi-IN', ar: 'ar-SA', pt: 'pt-PT'
+      en: "en-US", es: "es-ES", fr: "fr-FR", de: "de-DE", zh: "zh-CN", hi: "hi-IN",
+      ar: "ar-SA", ru: "ru-RU", ja: "ja-JP", pt: "pt-PT", it: "it-IT"
     };
 
-    for (let code in langMap) {
-      inputLang.innerHTML += `<option value="${code}">${langMap[code]}</option>`;
-      outputLang.innerHTML += `<option value="${code}">${langMap[code]}</option>`;
-    }
+    Object.entries(languages).forEach(([code, name]) => {
+      inputLang.innerHTML += `<option value="${code}">${name}</option>`;
+      outputLang.innerHTML += `<option value="${code}">${name}</option>`;
+    });
     inputLang.value = 'en';
     outputLang.value = 'es';
 
-    function speak(text, langCode) {
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = langCodeMap[langCode] || 'en-US';
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utter);
-    }
-
     translateBtn.onclick = async () => {
       const text = inputText.value.trim();
-      if (!text) return;
       const targetLanguage = outputLang.value;
-      const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, targetLanguage })
-      });
-      const data = await res.json();
-      translatedText.innerText = data.translatedText;
-      speak(data.translatedText, targetLanguage);
+      if (!text) return;
+      try {
+        const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, targetLanguage })
+        });
+        const data = await res.json();
+        translatedText.innerText = data.translatedText || 'Error';
+        speak(data.translatedText, targetLanguage);
+      } catch (e) {
+        translatedText.innerText = 'Translation error';
+      }
     };
 
     micBtn.onclick = () => {
+      if (!('webkitSpeechRecognition' in window)) return alert('Mic not supported');
       const recog = new webkitSpeechRecognition();
-      recog.lang = langCodeMap[inputLang.value];
-      recog.onresult = (e) => {
-        inputText.value = e.results[0][0].transcript;
+      recog.lang = langCodeMap[inputLang.value] || 'en-US';
+      recog.onresult = e => {
+        const transcript = e.results[0][0].transcript;
+        inputText.value = transcript;
         translateBtn.click();
       };
+      recog.onerror = e => alert('Mic error: ' + e.error);
       recog.start();
     };
 
-    speakBtn.onclick = () => speak(translatedText.innerText, outputLang.value);
+    speakBtn.onclick = () => {
+      const text = translatedText.innerText;
+      const lang = langCodeMap[outputLang.value] || 'en-US';
+      if ('speechSynthesis' in window) {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = lang;
+        speechSynthesis.speak(utter);
+      }
+    };
 
     clearBtn.onclick = () => {
       inputText.value = '';
       translatedText.innerText = '';
     };
 
-    let assistantActive = false;
     assistantBtn.onclick = () => {
-      if (assistantActive) return location.reload();
-      assistantActive = true;
-      assistantBtn.textContent = 'Assistant Listening...';
-      speak('Hello! Which languages would you like to translate from and to?');
-      listenForLanguages();
+      const bot = new webkitSpeechRecognition();
+      bot.lang = 'en-US';
+      bot.onresult = e => {
+        const said = e.results[0][0].transcript.toLowerCase();
+        if (said.includes('change language')) {
+          inputLang.value = 'en';
+          outputLang.value = 'es';
+          translatedText.innerText = 'Languages reset to English to Spanish';
+        } else if (said.includes('stop')) {
+          translatedText.innerText = 'Assistant stopped';
+        } else {
+          inputText.value = said;
+          translateBtn.click();
+        }
+      };
+      bot.start();
     };
-
-    function listenForLanguages() {
-      const recog = new webkitSpeechRecognition();
-      recog.lang = 'en-US';
-      recog.onresult = (e) => {
-        const t = e.results[0][0].transcript.toLowerCase();
-        const fromLang = Object.keys(langMap).find(l => t.includes(langMap[l].toLowerCase()) && t.includes('from'));
-        const toLang = Object.keys(langMap).find(l => t.includes(langMap[l].toLowerCase()) && t.includes('to'));
-        if (fromLang && toLang) {
-          inputLang.value = fromLang;
-          outputLang.value = toLang;
-          speak(`Got it. Translating from ${langMap[fromLang]} to ${langMap[toLang]}. What would you like to translate?`);
-          setTimeout(() => listenAndTranslate(), 3000);
-        } else {
-          speak('Sorry, I could not understand the languages. Please say again.');
-          setTimeout(listenForLanguages, 3000);
-        }
-      };
-      recog.start();
-    }
-
-    function listenAndTranslate() {
-      const recog = new webkitSpeechRecognition();
-      recog.lang = langCodeMap[inputLang.value];
-      recog.onresult = async (e) => {
-        const phrase = e.results[0][0].transcript;
-        inputText.value = phrase;
-        const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: phrase, targetLanguage: outputLang.value })
-        });
-        const data = await res.json();
-        translatedText.innerText = data.translatedText;
-        speak(data.translatedText, outputLang.value);
-        setTimeout(() => speak('Say another phrase or say change languages or stop.'), 4000);
-        setTimeout(() => listenForCommand(), 6000);
-      };
-      recog.start();
-    }
-
-    function listenForCommand() {
-      const recog = new webkitSpeechRecognition();
-      recog.lang = 'en-US';
-      recog.onresult = (e) => {
-        const txt = e.results[0][0].transcript.toLowerCase();
-        if (txt.includes('stop')) {
-          speak('Goodbye.');
-          assistantBtn.textContent = 'Start Assistant';
-          assistantActive = false;
-          return;
-        } else if (txt.includes('change')) {
-          speak('Please tell me the new languages.');
-          setTimeout(listenForLanguages, 3000);
-        } else {
-          listenAndTranslate();
-        }
-      };
-      recog.start();
-    }
   </script>
 </body>
 </html>
