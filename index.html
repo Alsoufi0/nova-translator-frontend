@@ -83,7 +83,7 @@
       <select id="inputLang"></select>
       <select id="outputLang"></select>
     </div>
-    <textarea id="inputText" placeholder="..." ></textarea>
+    <textarea id="inputText" placeholder="..."></textarea>
     <div id="output"></div>
     <div class="buttons">
       <button id="translateBtn">Translate</button>
@@ -147,7 +147,7 @@
     };
 
     micBtn.onclick = () => {
-      if (!('webkitSpeechRecognition' in window)) { return; }
+      if (!('webkitSpeechRecognition' in window)) { alert("Speech recognition not supported."); return; }
       const r = new webkitSpeechRecognition();
       r.lang = langCodes[inputLang.value];
       r.interimResults = false;
@@ -155,6 +155,7 @@
         inputText.value = e.results[0][0].transcript;
         translateBtn.click();
       };
+      r.onerror = () => { logEl.textContent = 'Mic error'; };
       r.start();
     };
 
@@ -168,54 +169,77 @@
       logEl.textContent = 'Ready';
     };
 
-    const rec = new webkitSpeechRecognition();
-    rec.lang = 'en-US';
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-    let state = 'init'; // init, setLang, ready
+    // Assistant state
+    let assistantState = 'idle'; // idle, lang, phrase, loop
+    let assistantRec = null;
 
-    rec.onresult = async e => {
-      const txt = e.results[0][0].transcript.trim().toLowerCase();
-      if (state === 'setLang') {
-        const m = txt.match(/(?:from )?([a-z]+) to ([a-z]+)/);
-        if (m && languages[m[1]] && languages[m[2]]) {
-          inputLang.value = m[1];
-          outputLang.value = m[2];
-          logEl.textContent = `From ${languages[m[1]]} to ${languages[m[2]]}`;
-          speak(`Translating from ${languages[m[1]]} to ${languages[m[2]]}. What would you like to translate?`, m[1]);
-          state = 'ready';
-        } else {
-          speak('Please say for example from Italian to Spanish');
+    function startAssistantRecognition(prompt, lang='en') {
+      speak(prompt, lang);
+      if (!('webkitSpeechRecognition' in window)) { logEl.textContent = 'No recognition'; return; }
+      if (assistantRec) { assistantRec.abort(); assistantRec = null; }
+      assistantRec = new webkitSpeechRecognition();
+      assistantRec.lang = langCodes[lang] || 'en-US';
+      assistantRec.interimResults = false;
+      assistantRec.onresult = async (e) => {
+        const txt = e.results[0][0].transcript.trim().toLowerCase();
+        if (assistantState === 'lang') {
+          let m = txt.match(/(?:from )?([a-z]+) to ([a-z]+)/);
+          if (!m) m = txt.match(/([a-z]+) into ([a-z]+)/);
+          if (!m) m = txt.match(/([a-z]+) ([a-z]+)/);
+          let foundFrom = null, foundTo = null;
+          if (m) {
+            for (const code in languages) {
+              if (languages[code].toLowerCase() === m[1] || code === m[1]) foundFrom = code;
+              if (languages[code].toLowerCase() === m[2] || code === m[2]) foundTo = code;
+            }
+          }
+          if (foundFrom && foundTo && foundFrom !== foundTo) {
+            inputLang.value = foundFrom;
+            outputLang.value = foundTo;
+            assistantState = 'phrase';
+            logEl.textContent = `From ${languages[foundFrom]} to ${languages[foundTo]}`;
+            setTimeout(()=>startAssistantRecognition("What would you like to translate?", foundFrom), 700);
+          } else {
+            logEl.textContent = 'Could not detect languages.';
+            setTimeout(()=>startAssistantRecognition("Please say for example from Italian to Spanish.", 'en'), 700);
+          }
         }
-      } else if (state === 'ready') {
-        if (/change/.test(txt)) {
-          state = 'setLang';
-          speak('Which languages?');
-        } else if (/stop/.test(txt)) {
-          state = 'init';
-          logEl.textContent = 'Ready';
-          speak('Stopping assistant');
-        } else {
+        else if (assistantState === 'phrase' || assistantState === 'loop') {
+          if (/stop/.test(txt)) {
+            assistantState = 'idle';
+            logEl.textContent = 'Stopped';
+            speak('Stopping assistant', inputLang.value);
+            return;
+          }
+          if (/change/.test(txt)) {
+            assistantState = 'lang';
+            setTimeout(()=>startAssistantRecognition("Which languages do you want to translate from and to?", 'en'), 600);
+            return;
+          }
           logEl.textContent = 'Translating...';
-          const out = await translate(txt);
           inputText.value = txt;
+          const out = await translate(txt);
           outputEl.textContent = out;
           speak(out, outputLang.value);
-          logEl.textContent = 'Ready';
+          assistantState = 'loop';
+          setTimeout(()=>startAssistantRecognition("Say another phrase, say change languages, or say stop.", inputLang.value), 1500);
         }
-      }
-    };
-
-    rec.onend = () => {
-      if (state !== 'init') rec.start();
-    };
+      };
+      assistantRec.onend = () => {
+        if (assistantState !== 'idle') setTimeout(()=>startAssistantRecognition('', assistantRec.lang.split('-')[0]), 500);
+      };
+      assistantRec.onerror = () => {
+        logEl.textContent = 'Assistant error. Try again.';
+        assistantState = 'idle';
+      };
+      assistantRec.start();
+    }
 
     assistantBtn.onclick = () => {
-      if (state !== 'init') return;
-      state = 'setLang';
+      if (assistantState !== 'idle') return;
+      assistantState = 'lang';
       logEl.textContent = 'Listening for languages...';
-      speak('Which languages do you want to translate from and to?');
-      rec.start();
+      startAssistantRecognition('Which languages do you want to translate from and to?', 'en');
     };
   </script>
 </body>
