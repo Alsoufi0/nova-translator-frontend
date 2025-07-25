@@ -139,7 +139,7 @@
       margin-bottom: 0.3em;
       flex-wrap: wrap;
     }
-    .main-btn, .mic-btn, .clear-btn, .speak-btn, .assistant-btn {
+    .assistant-btn {
       padding: 0.72em 1.2em;
       font-size: 1.07rem;
       font-weight: 800;
@@ -150,36 +150,16 @@
       cursor: pointer;
       box-shadow: 0 1px 7px #00fff44a;
       transition: background 0.16s, transform 0.11s;
-      margin-bottom: 0.08em;
-      margin-right: 0.1em;
       outline: none;
       font-family: inherit;
+      margin-bottom: 0.08em;
+      margin-right: 0.1em;
     }
     .assistant-btn.active {
       background: linear-gradient(90deg, #38ff98 30%, #0ff4fa 100%);
       color: #00151f;
       font-weight: 900;
       border: 2px solid #25ffa5;
-    }
-    .mic-btn {
-      background: linear-gradient(120deg,#00ffd4 10%, #57deff 95%);
-      color: #181c38;
-      font-size: 1.16em;
-      font-weight: 900;
-      box-shadow: 0 0 20px #00ffd7cc;
-    }
-    .speak-btn {
-      background: linear-gradient(120deg, #2cffb9 40%, #21c8ff 100%);
-      color: #16192c;
-      font-weight: 900;
-      font-size: 1.13em;
-      box-shadow: 0 0 18px #1fffd366;
-    }
-    .clear-btn {
-      background: linear-gradient(120deg, #ff607a 45%, #ff6ae7 100%);
-      color: #fff;
-      font-weight: 900;
-      box-shadow: 0 0 10px #ff7091aa;
     }
     @media (max-width: 800px) {
       .flip-row { flex-direction: column; gap: 1em; }
@@ -194,7 +174,6 @@
   <div class="container">
     <h2>Nova Translator</h2>
     <div class="flip-row">
-      <!-- Input language panel -->
       <div class="lang-panel">
         <div class="label">Input Language</div>
         <div class="lang-select-row">
@@ -214,7 +193,6 @@
         </div>
         <textarea id="inputText" placeholder="Type or speak..."></textarea>
       </div>
-      <!-- Output language panel -->
       <div class="lang-panel">
         <div class="label">Target Language</div>
         <div class="lang-select-row">
@@ -236,15 +214,10 @@
       </div>
     </div>
     <div class="btn-row">
-      <button class="main-btn" id="translateBtn">Translate</button>
-      <button class="mic-btn" id="micBtn" title="Speak Input">🎤</button>
-      <button class="speak-btn" id="speakBtn" title="Speak Output">🔊</button>
-      <button class="clear-btn" id="clearBtn" title="Clear All">Clear</button>
-      <button class="assistant-btn" id="autoListenBtn">Start Assistant</button>
+      <button class="assistant-btn" id="assistantBtn">Start Assistant</button>
     </div>
   </div>
   <script>
-    // === Core Variables ===
     const langMap = {
       en: "English", es: "Spanish", fr: "French", de: "German", zh: "Chinese (Simplified)", hi: "Hindi",
       ar: "Arabic", ru: "Russian", ja: "Japanese", pt: "Portuguese", it: "Italian"
@@ -257,42 +230,31 @@
     const outputLang = document.getElementById('outputLang');
     const inputText = document.getElementById('inputText');
     const translatedText = document.getElementById('translatedText');
-    const translateBtn = document.getElementById('translateBtn');
-    const micBtn = document.getElementById('micBtn');
-    const speakBtn = document.getElementById('speakBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const autoListenBtn = document.getElementById('autoListenBtn');
+    const assistantBtn = document.getElementById('assistantBtn');
 
     let recognition = null;
     let isListening = false;
-    let botState = 'init'; // init, setLang, ready, translating
+    let botState = 'init';
 
-    // === Bot Assistant Logic ===
-    autoListenBtn.onclick = () => {
-      if (isListening) {
-        stopAssistant();
-      } else {
-        botState = 'init';
-        startBotAssistant();
-      }
+    assistantBtn.onclick = () => {
+      if (isListening) stopAssistant();
+      else startAssistant();
     };
 
-    function startBotAssistant() {
+    function startAssistant() {
       isListening = true;
-      autoListenBtn.textContent = "Assistant Listening... (Click to stop)";
-      autoListenBtn.classList.add('active');
-      autoListenBtn.disabled = false;
-      speak("Hello! Which language would you like to translate from, and to?");
+      assistantBtn.textContent = "Assistant Listening... (Click to stop)";
+      assistantBtn.classList.add('active');
+      speak("Hello! Which languages do you want to translate from and to?");
       botState = 'setLang';
-      setTimeout(() => listenOnce(), 1200);
+      setTimeout(() => listenOnce(), 1300);
     }
 
     function stopAssistant() {
       isListening = false;
       if (recognition) recognition.abort();
-      autoListenBtn.textContent = "Start Assistant";
-      autoListenBtn.classList.remove('active');
-      autoListenBtn.disabled = false;
+      assistantBtn.textContent = "Start Assistant";
+      assistantBtn.classList.remove('active');
       speak("Assistant stopped. Goodbye.");
       botState = 'init';
     }
@@ -312,23 +274,23 @@
       recognition.onresult = async (event) => {
         const spokenText = event.results[0][0].transcript.trim();
         if (botState === 'setLang') {
-          if (await handleLanguageSetting(spokenText)) {
-            speak(`Great! I'm ready. What would you like to translate?`);
+          if (await setLanguagesFromSpeech(spokenText)) {
+            speak(`Input language is ${langMap[inputLang.value]}, target language is ${langMap[outputLang.value]}. What would you like to translate?`);
             botState = 'ready';
           } else {
             speak("Sorry, I didn't catch the languages. Please say, for example, from Italian to Spanish.");
             setTimeout(() => listenOnce(), 1400);
             return;
           }
-          setTimeout(() => listenOnce(), 1800);
-        } else if (botState === 'ready' || botState === 'translating') {
-          if (/change languages?|switch languages?/i.test(spokenText)) {
-            speak("Which language would you like to translate from, and to?");
+          setTimeout(() => listenOnce(), 2000);
+        } else if (botState === 'ready') {
+          if (/change languages?/i.test(spokenText)) {
+            speak("Which languages do you want to translate from and to?");
             botState = 'setLang';
             setTimeout(() => listenOnce(), 1200);
             return;
           }
-          if (/stop (assistant|bot|listening)/i.test(spokenText)) {
+          if (/stop( assistant| bot| listening)?/i.test(spokenText)) {
             stopAssistant();
             return;
           }
@@ -342,40 +304,46 @@
       };
 
       recognition.onend = () => {
-        if (isListening && botState !== 'init') {
-          setTimeout(() => listenOnce(), 900);
-        }
+        if (isListening && botState !== 'init') setTimeout(() => listenOnce(), 900);
       };
-
       recognition.onerror = (event) => {
         if (event.error !== "no-speech" && event.error !== "aborted") {
           speak("Sorry, I didn't catch that.");
         }
-        if (isListening && botState !== 'init') {
-          setTimeout(() => listenOnce(), 1000);
-        }
+        if (isListening && botState !== 'init') setTimeout(() => listenOnce(), 1100);
       };
       recognition.start();
     }
 
-    // Parse language answer like "from Italian to Spanish", "Italian to Spanish", "French into German"
-    async function handleLanguageSetting(txt) {
-      const fromTo = /from ([a-z\s]+) to ([a-z\s]+)/i.exec(txt)
-        || /([a-z\s]+) (?:to|into|in) ([a-z\s]+)/i.exec(txt);
-      if (fromTo) {
-        let foundFrom = false, foundTo = false;
-        let from = fromTo[1].trim(), to = fromTo[2].trim();
-        for (const [code, name] of Object.entries(langMap)) {
-          if (name.toLowerCase().includes(from.toLowerCase()) || from.toLowerCase().includes(name.toLowerCase())) {
-            inputLang.value = code; foundFrom = true;
-          }
-          if (name.toLowerCase().includes(to.toLowerCase()) || to.toLowerCase().includes(name.toLowerCase())) {
-            outputLang.value = code; foundTo = true;
+    // Parse language selection like "from Italian to Spanish" or "Italian to Spanish"
+    async function setLanguagesFromSpeech(txt) {
+      const regexes = [
+        /from ([a-z\s]+) to ([a-z\s]+)/i,
+        /([a-z\s]+) to ([a-z\s]+)/i,
+        /from ([a-z\s]+) into ([a-z\s]+)/i,
+        /([a-z\s]+) into ([a-z\s]+)/i
+      ];
+      for (let rgx of regexes) {
+        let match = txt.match(rgx);
+        if (match) {
+          let fromRaw = match[1].trim(), toRaw = match[2].trim();
+          let fromCode = findLangCode(fromRaw);
+          let toCode = findLangCode(toRaw);
+          if (fromCode && toCode) {
+            inputLang.value = fromCode;
+            outputLang.value = toCode;
+            return true;
           }
         }
-        return foundFrom && foundTo;
       }
       return false;
+    }
+    function findLangCode(raw) {
+      raw = raw.toLowerCase();
+      for (const [code, name] of Object.entries(langMap)) {
+        if (name.toLowerCase().includes(raw) || raw.includes(name.toLowerCase())) return code;
+      }
+      return null;
     }
 
     async function translateAndSpeak() {
@@ -402,7 +370,6 @@
         speak("Sorry, network or server error.", inputLang.value);
       }
     }
-
     function speak(text, lang = "en") {
       if ('speechSynthesis' in window && text) {
         const utter = new SpeechSynthesisUtterance(text);
@@ -413,6 +380,6 @@
         window.speechSynthesis.speak(utter);
       }
     }
-
-    // Manual Controls
-    translateBtn.onclick = () => { translateAnd
+  </script>
+</body>
+</html>
