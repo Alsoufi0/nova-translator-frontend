@@ -359,6 +359,25 @@
       autoListenBtn.disabled = false;
     }
   
+    function isAssistanceCommand(text) {
+      return /assistance/i.test(text || "");
+    }
+  
+    async function handleAssistance() {
+      if (!isListening) return;
+      speak("Do you need anything else?", inputLang.value, async () => {
+        let answer = await listen(langCodeMap[inputLang.value] || "en-US");
+        if (!isListening) return;
+        if (/no\b/i.test(answer)) {
+          speak("Goodbye.", inputLang.value);
+          stopAssistant();
+        } else {
+          speak("Okay, let's start again. Which languages do you want to translate from and to?", "en", () => botAskLanguages());
+          botStep = 1;
+        }
+      });
+    }
+  
     function listen(lang = "en-US") {
       return new Promise((resolve, reject) => {
         if (!('webkitSpeechRecognition' in window)) {
@@ -400,6 +419,10 @@
       if (!isListening) return;
       let heard = await listen("en-US");
       if (!isListening) return;
+      if (isAssistanceCommand(heard)) {
+        await handleAssistance();
+        return;
+      }
       if (/stop (assistant|listening|bot)/i.test(heard)) {
         speak("Stopping assistant. Goodbye.", inputLang.value);
         stopAssistant();
@@ -420,6 +443,10 @@
       if (!isListening) return;
       let heard = await listen(langCodeMap[inputLang.value] || "en-US");
       if (!isListening) return;
+      if (isAssistanceCommand(heard)) {
+        await handleAssistance();
+        return;
+      }
       if (/stop (assistant|listening|bot)/i.test(heard)) {
         speak("Stopping assistant. Goodbye.", inputLang.value);
         stopAssistant();
@@ -568,6 +595,7 @@
       }
     });
   </script>
+  
   
 </body>
 </html>
