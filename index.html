@@ -102,37 +102,89 @@
     const speakBtn = document.getElementById('speakBtn');
     const autoListenBtn = document.getElementById('autoListenBtn');
   
-    let isListening = false, recognition = null;
+    let recognition = null;
+    let isListening = false;
   
-    function startContinuousAssistant() {
+    // Voice Assistant Core
+    function startAssistant() {
       if (!('webkitSpeechRecognition' in window)) {
         alert('Speech recognition not supported in this browser.');
         return;
       }
-      if (recognition) recognition.abort();
+      if (recognition) {
+        recognition.abort();
+        recognition = null;
+      }
       recognition = new webkitSpeechRecognition();
       recognition.lang = langCodeMap[inputLang.value] || "en-US";
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
-      recognition.continuous = false;
       isListening = true;
   
-      recognition.onresult = (event) => {
-        const spokenText = event.results[0][0].transcript.trim().toLowerCase();
-        processVoiceCommand(spokenText);
+      autoListenBtn.textContent = "Assistant Listening... (Click to stop)";
+      autoListenBtn.classList.add('active');
+      autoListenBtn.disabled = false;
+  
+      recognition.onresult = async (event) => {
+        const spokenText = event.results[0][0].transcript.trim();
+        await processVoiceCommand(spokenText);
+        // Wait until speaking is done, then listen again
+        if (isListening) {
+          waitForSpeechEnd().then(() => {
+            if (isListening) setTimeout(() => recognition.start(), 400);
+          });
+        }
       };
       recognition.onend = () => {
-        if (isListening) setTimeout(() => recognition.start(), 400); // restart quickly
+        // Only auto-restart if assistant is active
+        if (isListening && !window.speechSynthesis.speaking) {
+          setTimeout(() => recognition.start(), 400);
+        }
       };
       recognition.onerror = (event) => {
-        if (event.error !== "no-speech") alert("Speech error: " + event.error);
-        isListening = false;
+        if (event.error !== "no-speech" && event.error !== "aborted") {
+          alert("Speech error: " + event.error);
+        }
+        if (isListening) {
+          setTimeout(() => recognition.start(), 700);
+        }
       };
       recognition.start();
     }
   
-    function processVoiceCommand(spokenText) {
-      // 1. Detect "translate from X to Y"
+    function stopAssistant() {
+      isListening = false;
+      if (recognition) recognition.abort();
+      autoListenBtn.textContent = "Start Assistant";
+      autoListenBtn.classList.remove('active');
+      autoListenBtn.disabled = false;
+    }
+  
+    autoListenBtn.onclick = () => {
+      if (isListening) {
+        stopAssistant();
+      } else {
+        startAssistant();
+      }
+    };
+  
+    // Wait until all TTS speech finishes
+    function waitForSpeechEnd() {
+      return new Promise(resolve => {
+        if (!('speechSynthesis' in window)) return resolve();
+        if (!window.speechSynthesis.speaking) return resolve();
+        let id = setInterval(() => {
+          if (!window.speechSynthesis.speaking) {
+            clearInterval(id);
+            resolve();
+          }
+        }, 100);
+      });
+    }
+  
+    // Voice Command Parsing + Actions
+    async function processVoiceCommand(spokenText) {
+      // 1. "translate <PHRASE> from <LANG1> to <LANG2>"
       const fromToRegex = /translate (.+?) from ([a-z]+) to ([a-z]+)/i;
       let match = spokenText.match(fromToRegex);
       if (match) {
@@ -147,11 +199,11 @@
         if (fromCode) inputLang.value = fromCode;
         if (toCode) outputLang.value = toCode;
         inputText.value = phrase;
-        translateAndSpeak();
+        await translateAndSpeak();
         return;
       }
   
-      // 2. Detect "translate ... to Y" or "how do you say ... in Y"
+      // 2. "translate <PHRASE> to <LANG2>" or "how do you say <PHRASE> in <LANG2>"
       const translateRegex = /(translate|say|how do you say) (.+?)( to | into | in )([a-z]+)$/i;
       match = spokenText.match(translateRegex);
       if (match && match[2]) {
@@ -165,11 +217,11 @@
           }
         }
         inputText.value = phrase;
-        translateAndSpeak();
+        await translateAndSpeak();
         return;
       }
   
-      // 3. Detect "change language to Y"
+      // 3. "change language to <LANG2>"
       const changeLangRegex = /(change|set|switch)( (target|output))? language (to|into|as)?\s*([a-z]+)/i;
       match = spokenText.match(changeLangRegex);
       if (match) {
@@ -185,30 +237,41 @@
         return;
       }
   
-      // 4. Default: treat as text to translate
+      // 4. "stop assistant"
+      if (/stop (assistant|listening|bot)/i.test(spokenText)) {
+        speak("Stopping assistant. Goodbye.", inputLang.value);
+        stopAssistant();
+        return;
+      }
+  
+      // 5. Just treat as text to translate
       inputText.value = spokenText;
-      translateAndSpeak();
+      await translateAndSpeak();
     }
   
-    function translateAndSpeak() {
+    async function translateAndSpeak() {
       const text = inputText.value.trim();
       const targetLanguage = outputLang.value;
       translatedText.innerText = ""; // clear first
       if (!text) return;
-      fetch('https://nova-translator-backend.onrender.com/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, targetLanguage })
-      })
-      .then(res => res.json())
-      .then(data => {
+      try {
+        const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, targetLanguage })
+        });
+        const data = await res.json();
         if (data.translatedText) {
           translatedText.innerText = data.translatedText;
           speak(data.translatedText, targetLanguage);
         } else {
           translatedText.innerText = "Translation failed: " + (data.error || "Unknown error");
+          speak("Sorry, translation failed.", inputLang.value);
         }
-      });
+      } catch (err) {
+        translatedText.innerText = "Network or server error: " + err.message;
+        speak("Sorry, network or server error.", inputLang.value);
+      }
     }
   
     function speak(text, lang) {
@@ -222,21 +285,25 @@
       }
     }
   
-    autoListenBtn.onclick = () => {
-      if (!isListening) {
-        startContinuousAssistant();
-        autoListenBtn.textContent = "Assistant Listening...";
-        autoListenBtn.disabled = true;
-        autoListenBtn.style.opacity = 0.65;
-      }
-    };
     speakBtn.onclick = () => { speak(translatedText.innerText, outputLang.value); };
     clearBtn.onclick = () => {
       inputText.value = '';
       translatedText.innerText = '';
       inputText.focus();
     };
+  
+    // Optionally: Listen for ENTER key to trigger translation (desktop)
+    inputText.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        translateAndSpeak();
+      }
+    });
+  
+    // Optional: Start assistant immediately if desired (but requires user gesture per browser rules)
+    // window.onload = () => { startAssistant(); };
   </script>
+  
   
 
 </body>
