@@ -303,221 +303,153 @@
       en: "en-US", es: "es-ES", fr: "fr-FR", de: "de-DE", zh: "zh-CN", hi: "hi-IN",
       ar: "ar-SA", ru: "ru-RU", ja: "ja-JP", pt: "pt-PT", it: "it-IT"
     };
+    
+    const OPENAI_API_KEY = "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";
+    
     const inputLang = document.getElementById('inputLang');
     const outputLang = document.getElementById('outputLang');
     const inputText = document.getElementById('inputText');
     const translatedText = document.getElementById('translatedText');
-    const translateBtn = document.getElementById('translateBtn');
     const clearBtn = document.getElementById('clearBtn');
     const speakBtn = document.getElementById('speakBtn');
+    const autoListenBtn = document.getElementById('autoListenBtn');
+    const translateBtn = document.getElementById('translateBtn');
     const micBtn = document.getElementById('micBtn');
     const flipBtn = document.getElementById('flipBtn');
-    const autoListenBtn = document.getElementById('autoListenBtn');
-  
+    
     let recognition = null;
     let isListening = false;
-    let botStep = 0;
-  
-    inputLang.value = "en";
-    outputLang.value = "es";
-  
+    
     function speak(text, lang, cb) {
-      if ('speechSynthesis' in window && text) {
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = langCodeMap[lang] || lang || "en-US";
-        utter.rate = 1.03;
-        utter.volume = 1;
-        if (typeof cb === 'function') {
-          utter.onend = cb;
-        }
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utter);
-      } else if (typeof cb === 'function') {
-        cb();
-      }
+      if (!('speechSynthesis' in window) || !text) { cb && cb(); return; }
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = langCodeMap[lang] || lang || "en-US";
+      utter.rate = 1.04;
+      utter.volume = 1;
+      utter.onend = () => { cb && cb(); };
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
     }
-  
-    function waitForSpeechEnd() {
+    
+    function listen(lang = "en-US") {
       return new Promise(resolve => {
-        if (!('speechSynthesis' in window)) return resolve();
-        if (!window.speechSynthesis.speaking) return resolve();
-        let id = setInterval(() => {
-          if (!window.speechSynthesis.speaking) {
-            clearInterval(id);
-            resolve();
-          }
-        }, 100);
+        if (!('webkitSpeechRecognition' in window)) {
+          resolve("");
+          return;
+        }
+        let rec = new webkitSpeechRecognition();
+        rec.lang = lang;
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
+        rec.onresult = e => resolve(e.results[0][0].transcript.trim());
+        rec.onerror = () => resolve("");
+        rec.onend = () => {};
+        rec.start();
       });
     }
-  
-    function stopAssistant() {
-      isListening = false;
-      botStep = 0;
-      if (recognition) recognition.abort();
-      autoListenBtn.textContent = "Assistant";
-      autoListenBtn.classList.remove('active');
-      autoListenBtn.disabled = false;
+    
+    function isTranslationQuestion(text) {
+      text = (text || "").toLowerCase();
+      return /translate|how do you say|in [a-z]+|to [a-z]+|from [a-z]+|what is .* in|say .* in|meaning of .* in|convert .* to/i.test(text);
     }
-  
+    
     function isAssistanceCommand(text) {
       return /assistance/i.test(text || "");
     }
-  
     function isStopCommand(text) {
-      return /stop (assistant|listening|bot|translating|translation)/i.test(text || "");
+      return /(stop( assistant| listening| translating)?|cancel|goodbye|exit)/i.test(text || "");
     }
-  
-    async function handleAssistance() {
-      if (!isListening) return;
-      speak("Do you need anything else?", inputLang.value, async () => {
-        let answer = await listen(langCodeMap[inputLang.value] || "en-US");
-        if (!isListening) return;
-        if (/no\b/i.test(answer)) {
-          speak("Goodbye.", inputLang.value);
-          stopAssistant();
-        } else {
-          speak("Okay, let's start again. Which languages do you want to translate from and to?", "en", () => botAskLanguages());
-          botStep = 1;
-        }
-      });
+    
+    async function askChatGPT(question) {
+      try {
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{role: "user", content: question}],
+            max_tokens: 120,
+            temperature: 0.7
+          })
+        });
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content?.trim() || "Sorry, I couldn't find an answer.";
+      } catch (e) {
+        return "Sorry, there was a problem connecting to ChatGPT.";
+      }
     }
-  
-    function listen(lang = "en-US") {
-      return new Promise((resolve, reject) => {
-        if (!('webkitSpeechRecognition' in window)) {
-          reject('Speech recognition not supported');
-          return;
-        }
-        if (recognition) recognition.abort();
-        recognition = new webkitSpeechRecognition();
-        recognition.lang = lang;
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-        recognition.onresult = (event) => {
-          resolve(event.results[0][0].transcript.trim());
-        };
-        recognition.onerror = (event) => {
-          if (event.error !== "no-speech" && event.error !== "aborted") {
-            speak("Sorry, speech error: " + event.error, "en");
-          }
-          resolve("");
-        };
-        recognition.onend = () => {};
-        recognition.start();
-      });
+    
+    let botStep = 0;
+    
+    function startAssistant() {
+      if (isListening) return;
+      isListening = true;
+      autoListenBtn.textContent = "Assistant Listening... (Click to stop)";
+      autoListenBtn.classList.add('active');
+      speak("Hello! Which languages do you want to translate from and to?", "en", () => botAskLanguages());
+      botStep = 1;
     }
-  
-    autoListenBtn.onclick = async () => {
+    
+    function stopAssistant() {
+      isListening = false;
+      autoListenBtn.textContent = "Start Assistant";
+      autoListenBtn.classList.remove('active');
+      window.speechSynthesis.cancel();
+      if (recognition) recognition.abort();
+    }
+    
+    autoListenBtn.onclick = () => {
       if (isListening) {
         stopAssistant();
       } else {
-        isListening = true;
-        autoListenBtn.textContent = "Assistant Listening... (Click to stop)";
-        autoListenBtn.classList.add('active');
-        botStep = 1;
-        speak("Hello! Which languages do you want to translate from and to?", "en", () => botAskLanguages());
+        startAssistant();
       }
     };
-  
-    async function botAskLanguages() {
-      if (!isListening) return;
-      let heard = await listen("en-US");
-      if (!isListening) return;
-      if (isAssistanceCommand(heard)) {
-        await handleAssistance();
-        return;
+    
+    flipBtn.onclick = () => {
+      let temp = inputLang.value;
+      inputLang.value = outputLang.value;
+      outputLang.value = temp;
+      let tempText = inputText.value;
+      inputText.value = translatedText.innerText;
+      translatedText.innerText = tempText;
+      inputText.focus();
+    };
+    
+    micBtn.onclick = async () => {
+      let text = await listen(langCodeMap[inputLang.value] || "en-US");
+      if (text) inputText.value = text;
+    };
+    
+    speakBtn.onclick = () => {
+      speak(translatedText.innerText, outputLang.value);
+    };
+    
+    clearBtn.onclick = () => {
+      inputText.value = '';
+      translatedText.innerText = '';
+      inputText.focus();
+    };
+    
+    translateBtn.onclick = () => {
+      translateAndSpeak();
+    };
+    
+    inputText.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        translateAndSpeak();
       }
-      if (isStopCommand(heard)) {
-        speak("Stopping assistant. Goodbye.", inputLang.value);
-        stopAssistant();
-        return;
-      }
-      let found = extractLangsFromVoice(heard);
-      if (found && found.from && found.to) {
-        inputLang.value = found.from;
-        outputLang.value = found.to;
-        speak(`Okay, translating from ${langMap[found.from]} to ${langMap[found.to]}. What would you like to translate?`, found.from, () => botAskPhrase());
-        botStep = 2;
-      } else {
-        speak("Sorry, I didn't catch both languages. Please say, for example, translate from English to Spanish.", "en", () => botAskLanguages());
-      }
-    }
-  
-    async function botAskPhrase() {
-      if (!isListening) return;
-      let heard = await listen(langCodeMap[inputLang.value] || "en-US");
-      if (!isListening) return;
-      if (isAssistanceCommand(heard)) {
-        await handleAssistance();
-        return;
-      }
-      if (isStopCommand(heard)) {
-        speak("Stopping assistant. Goodbye.", inputLang.value);
-        stopAssistant();
-        return;
-      }
-      if (/change( languages?| language)?/i.test(heard)) {
-        speak("Which languages do you want to translate from and to?", "en", () => botAskLanguages());
-        botStep = 1;
-        return;
-      }
-      if (!heard || !heard.trim()) {
-        speak("Sorry, I didn't catch that. Please say your phrase again.", inputLang.value, () => botAskPhrase());
-        return;
-      }
-      inputText.value = heard;
-      await translateAndSpeak(() => botAskPhrase());
-    }
-  
-    function extractLangsFromVoice(str) {
-      str = (str||"").toLowerCase();
-      let langs = Object.entries(langMap);
-      for (let [fromCode, fromLang] of langs) {
-        for (let [toCode, toLang] of langs) {
-          if (fromCode !== toCode) {
-            let patterns = [
-              new RegExp(`${fromLang.toLowerCase()} to ${toLang.toLowerCase()}`),
-              new RegExp(`from ${fromLang.toLowerCase()} to ${toLang.toLowerCase()}`),
-              new RegExp(`${fromLang.toLowerCase()} into ${toLang.toLowerCase()}`),
-              new RegExp(`from ${fromLang.toLowerCase()} into ${toLang.toLowerCase()}`),
-              new RegExp(`${fromLang.toLowerCase()} and ${toLang.toLowerCase()}`),
-              new RegExp(`translate from ${fromLang.toLowerCase()} to ${toLang.toLowerCase()}`),
-              new RegExp(`translate ${fromLang.toLowerCase()} to ${toLang.toLowerCase()}`),
-              new RegExp(`translate ${fromLang.toLowerCase()} into ${toLang.toLowerCase()}`),
-              new RegExp(`from ${fromLang.toLowerCase()} in[to]? ${toLang.toLowerCase()}`),
-              new RegExp(`${fromLang.toLowerCase()} in[to]? ${toLang.toLowerCase()}`),
-              new RegExp(`from ${fromLang.toLowerCase()} for ${toLang.toLowerCase()}`),
-              new RegExp(`from ${fromCode} to ${toCode}`),
-              new RegExp(`${fromCode} to ${toCode}`)
-            ];
-            for (let p of patterns) {
-              if (p.test(str)) {
-                return {from: fromCode, to: toCode};
-              }
-            }
-          }
-        }
-      }
-      let found = str.match(/([a-z]+)\s*(to|into|and)\s*([a-z]+)/);
-      if (found && found[1] && found[3]) {
-        let from = null, to = null;
-        for (const [code, name] of langs) {
-          if (found[1] === code || found[1] === name.toLowerCase()) from = code;
-          if (found[3] === code || found[3] === name.toLowerCase()) to = code;
-        }
-        if (from && to && from !== to) return {from, to};
-      }
-      return null;
-    }
-  
+    });
+    
     async function translateAndSpeak(cb) {
       const text = inputText.value.trim();
       const targetLanguage = outputLang.value;
       translatedText.innerText = "";
-      if (!text) {
-        if (typeof cb === 'function') cb();
-        return;
-      }
+      if (!text) { cb && cb(); return; }
       try {
         const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
           method: 'POST',
@@ -537,68 +469,149 @@
         speak("Sorry, network or server error.", inputLang.value, cb);
       }
     }
-  
-    speakBtn.onclick = () => { speak(translatedText.innerText, outputLang.value); };
-    clearBtn.onclick = () => {
-      inputText.value = '';
-      translatedText.innerText = '';
-      inputText.focus();
-    };
-  
-    translateBtn.onclick = () => { translateAndSpeak(); };
-    flipBtn.onclick = () => {
-      const oldInput = inputLang.value;
-      inputLang.value = outputLang.value;
-      outputLang.value = oldInput;
-      const temp = inputText.value;
-      inputText.value = translatedText.innerText;
-      translatedText.innerText = temp;
-      inputText.focus();
-    };
-  
-    micBtn.onclick = () => {
-      if (!('webkitSpeechRecognition' in window)) {
-        alert('Speech recognition not supported in this browser.');
+    
+    function extractLangsFromVoice(voiceText) {
+      let text = (voiceText || "").toLowerCase();
+      let langs = Object.entries(langMap).map(([code, name]) => ({code, name: name.toLowerCase()}));
+      let from, to;
+      let fromMatch = langs.find(l => text.includes("from "+l.name));
+      let toMatch = langs.find(l => text.includes("to "+l.name) || text.includes("into "+l.name) || text.includes("in "+l.name));
+      if (!fromMatch && langs.some(l => text.startsWith(l.name))) fromMatch = langs.find(l => text.startsWith(l.name));
+      if (!toMatch && langs.some(l => text.endsWith(l.name))) toMatch = langs.find(l => text.endsWith(l.name));
+      if (!fromMatch || !toMatch) {
+        let found = [];
+        langs.forEach(l => { if (text.includes(l.name)) found.push(l.code); });
+        if (found.length>=2) { from = found[0]; to = found[1]; }
+      }
+      if (fromMatch) from = fromMatch.code;
+      if (toMatch) to = toMatch.code;
+      return from && to ? {from, to} : null;
+    }
+    
+    async function handleAssistance() {
+      if (!isListening) return;
+      speak("What do you need help with?", inputLang.value, async () => {
+        let answer = await listen(langCodeMap[inputLang.value] || "en-US");
+        if (!isListening) return;
+        if (/no\b/i.test(answer) || isStopCommand(answer)) {
+          speak("Goodbye.", inputLang.value);
+          stopAssistant();
+        } else if (/yes\b/i.test(answer)) {
+          speak("Okay, let's start again. Which languages do you want to translate from and to?", "en", () => botAskLanguages());
+          botStep = 1;
+        } else if (isTranslationQuestion(answer)) {
+          processVoiceCommand(answer);
+        } else {
+          const reply = await askChatGPT(answer);
+          speak(reply, inputLang.value, () => {
+            speak("Do you need anything else?", inputLang.value, async () => {
+              let follow = await listen(langCodeMap[inputLang.value] || "en-US");
+              if (/no\b/i.test(follow) || isStopCommand(follow)) {
+                speak("Goodbye.", inputLang.value);
+                stopAssistant();
+              } else {
+                speak("What do you need help with?", inputLang.value, handleAssistance);
+              }
+            });
+          });
+        }
+      });
+    }
+    
+    async function botAskLanguages() {
+      if (!isListening) return;
+      let heard = await listen("en-US");
+      if (!isListening) return;
+      if (isStopCommand(heard)) { stopAssistant(); return; }
+      if (isAssistanceCommand(heard)) { await handleAssistance(); return; }
+      let found = extractLangsFromVoice(heard);
+      if (found && found.from && found.to) {
+        inputLang.value = found.from;
+        outputLang.value = found.to;
+        speak(`Okay, translating from ${langMap[found.from]} to ${langMap[found.to]}. What would you like to translate?`, found.from, () => botAskPhrase());
+        botStep = 2;
+      } else {
+        speak("Sorry, I didn't catch both languages. Please say, for example, translate from English to Spanish.", "en", () => botAskLanguages());
+      }
+    }
+    
+    async function botAskPhrase() {
+      if (!isListening) return;
+      let heard = await listen(langCodeMap[inputLang.value] || "en-US");
+      if (!isListening) return;
+      if (isStopCommand(heard)) { stopAssistant(); return; }
+      if (isAssistanceCommand(heard)) { await handleAssistance(); return; }
+      if (/change( languages?| language)?/i.test(heard)) {
+        speak("Which languages do you want to translate from and to?", "en", () => botAskLanguages());
+        botStep = 1;
         return;
       }
-      if (recognition) recognition.abort();
-      recognition = new webkitSpeechRecognition();
-      recognition.lang = langCodeMap[inputLang.value] || "en-US";
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
-      let finalTranscript = "";
-      recognition.onresult = (event) => {
-        let interimTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
+      if (!heard || !heard.trim()) {
+        speak("Sorry, I didn't catch that. Please say your phrase again.", inputLang.value, () => botAskPhrase());
+        return;
+      }
+      inputText.value = heard;
+      await translateAndSpeak(() => botAskPhrase());
+    }
+    
+    async function processVoiceCommand(spokenText) {
+      const fromToRegex = /translate (.+?) from ([a-z]+) to ([a-z]+)/i;
+      let match = spokenText.match(fromToRegex);
+      if (match) {
+        const phrase = match[1].trim();
+        const fromLang = match[2];
+        const toLang = match[3];
+        let fromCode = null, toCode = null;
+        for (const [code, name] of Object.entries(langMap)) {
+          if (name.toLowerCase().includes(fromLang)) fromCode = code;
+          if (name.toLowerCase().includes(toLang)) toCode = code;
+        }
+        if (fromCode) inputLang.value = fromCode;
+        if (toCode) outputLang.value = toCode;
+        inputText.value = phrase;
+        await translateAndSpeak();
+        return;
+      }
+      const translateRegex = /(translate|say|how do you say) (.+?)( to | into | in )([a-z]+)$/i;
+      match = spokenText.match(translateRegex);
+      if (match && match[2]) {
+        let phrase = match[2].trim();
+        let userLang = match[4];
+        if (userLang) {
+          for (const [code, name] of Object.entries(langMap)) {
+            if (name.toLowerCase().includes(userLang)) {
+              outputLang.value = code;
+            }
           }
         }
-        inputText.value = finalTranscript + interimTranscript;
-      };
-      recognition.onerror = (event) => {
-        alert('Speech recognition error: ' + event.error);
-      };
-      recognition.onend = () => {
-        setTimeout(() => {
-          if (inputText.value.trim()) {
-            translateAndSpeak();
-          }
-        }, 1000);
-      };
-      recognition.start();
-    };
-  
-    inputText.addEventListener("keydown", function(event) {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        translateAndSpeak();
+        inputText.value = phrase;
+        await translateAndSpeak();
+        return;
       }
-    });
-  </script>
-  
+      const changeLangRegex = /(change|set|switch)( (target|output))? language (to|into|as)?\s*([a-z]+)/i;
+      match = spokenText.match(changeLangRegex);
+      if (match) {
+        const userLang = match[6];
+        for (const [code, name] of Object.entries(langMap)) {
+          if (name.toLowerCase().includes(userLang)) {
+            outputLang.value = code;
+            speak(`Target language changed to ${name}`, inputLang.value);
+            return;
+          }
+        }
+        speak("Sorry, I couldn't find that language.", inputLang.value);
+        return;
+      }
+      if (isStopCommand(spokenText)) {
+        speak("Stopping assistant. Goodbye.", inputLang.value);
+        stopAssistant();
+        return;
+      }
+      inputText.value = spokenText;
+      await translateAndSpeak();
+    }
+    </script>
+    
   
   
 </body>
