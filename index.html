@@ -2,285 +2,219 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Nova Translator | ZOX Robotics</title>
+  <title>Nova Voice Translator | ZOX Robotics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="zox-logo.png">
-  <meta name="theme-color" content="#21c8ff"/>
   <style>
-    html, body { margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       background: linear-gradient(135deg, #2dd2ff 0%, #9447ff 100%);
       min-height: 100vh;
       color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      margin: 0; padding: 0;
     }
-    .logo-bar {
-      margin-top: 1.7em; margin-bottom: 0.5em; width: 100vw; display: flex; justify-content: center;
-    }
-    .logo-bar img { width: 150px; border-radius: 16px; box-shadow: 0 2px 12px #13f5ff66; background: #fff; padding: 0.3em 1.2em 0.1em 1.2em; }
-    .container {
-      width: 97vw; max-width: 800px;
-      background: rgba(15,22,60,0.97);
-      border-radius: 36px;
-      box-shadow: 0 8px 40px #00fff355, 0 4px 16px #0005;
-      padding: 2.6em 2.1em 2em 2.1em;
-      margin: 0 auto;
-      border: 2.5px solid #21c8ff33;
-      display: flex; flex-direction: column; align-items: center;
-    }
-    h2 {
-      font-size: 2.4rem; font-weight: 900; margin-bottom: 1em;
-      letter-spacing: 2.7px;
-      background: linear-gradient(90deg, #21c8ff 13%, #ff6ae7 93%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-align: center;
-      text-shadow: 0 6px 30px #1ed2ffc2;
-      margin-top: 0;
-    }
-    .flip-row {
-      display: flex; width: 100%; gap: 1.5em; align-items: flex-end; justify-content: center; margin-bottom: 1.2em;
-    }
-    .lang-panel {
-      flex: 1; min-width: 230px; max-width: 360px;
-      background: linear-gradient(115deg, #232a55 60%, #382a67 100%);
-      padding: 1.1em 1.2em 1.2em 1.2em;
-      border-radius: 26px;
-      box-shadow: 0 2px 16px #4ff9ff25;
-      display: flex; flex-direction: column;
-      border: 2.5px solid #5ad0fd38;
-      min-height: 180px;
-    }
-    .label { color: #2cffb9; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35em; letter-spacing: 0.02em; text-shadow: 0 1px 7px #12fff99e; }
-    .lang-select-row { display: flex; gap: 0.3em; align-items: center; margin-bottom: 0.3em; }
-    select {
-      flex: 1; padding: 0.4em 0.8em; border-radius: 11px; border: 1.7px solid #28f3e988;
-      background: #232e48; color: #fff; font-size: 1rem; font-weight: 700; outline: none;
-    }
-    textarea, .output-box {
-      width: 100%; margin: 0.12em auto 0.1em auto; border-radius: 13px;
-      font-size: 1.13rem; background: #192241; color: #fff;
-      border: none; padding: 1em 1em; box-shadow: 0 2px 10px #00fff324;
-      outline: none; transition: box-shadow 0.2s; resize: none; min-height: 82px;
-      font-weight: 500;
-    }
-    .output-box {
-      background: #171b33; border: 2px solid #00f2ff28; font-weight: 800; text-shadow: 0 1px 7px #00f8ff13;
-      min-height: 82px; display: flex; align-items: center; font-size: 1.16rem;
-    }
-    .flip-btn {
-      margin: 0 0.4em 1.9em 0.4em; align-self: flex-end;
-      background: linear-gradient(120deg, #ff6ae7 25%, #21c8ff 100%);
-      border: 3px solid #15e6ffc2; border-radius: 50%; width: 56px; height: 56px;
-      color: #fff; font-size: 2.3rem; box-shadow: 0 2px 18px #33ffd1cf, 0 2px 10px #393c8c79;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      filter: drop-shadow(0 0 16px #28fffa80); transition: background 0.18s, transform 0.15s;
-    }
-    .flip-btn:active { filter: brightness(1.15) scale(1.07); }
+    .logo-bar { margin-top: 1.4em; margin-bottom: 0.5em; width: 100vw; display: flex; justify-content: center; }
+    .logo-bar img { width: 120px; border-radius: 15px; box-shadow: 0 2px 12px #13f5ff66; background: #fff; padding: 0.3em 1.2em 0.1em 1.2em; }
+    .container { width: 97vw; max-width: 700px; background: rgba(15,22,60,0.96); border-radius: 32px; box-shadow: 0 8px 32px #00fff355, 0 4px 16px #0005; padding: 2.3em 1.5em 2em 1.5em; margin: 0 auto; border: 2.5px solid #21c8ff33; display: flex; flex-direction: column; align-items: center; }
+    h2 { font-size: 2.1rem; font-weight: 900; margin-bottom: 0.6em; letter-spacing: 2px; background: linear-gradient(90deg, #21c8ff 13%, #ff6ae7 93%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin-top: 0; }
+    .label { color: #2cffb9; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.2em; letter-spacing: 0.01em; }
+    .row { display: flex; width: 100%; gap: 1.1em; align-items: flex-start; justify-content: center; margin-bottom: 1.2em; }
+    .lang-panel { flex: 1; min-width: 170px; max-width: 310px; background: linear-gradient(115deg, #232a55 60%, #382a67 100%); padding: 1em 1em 1.2em 1em; border-radius: 22px; box-shadow: 0 2px 10px #4ff9ff13; border: 2px solid #5ad0fd24; min-height: 120px; }
+    select { width: 100%; padding: 0.42em 0.8em; border-radius: 11px; border: 1.4px solid #28f3e988; background: #232e48; color: #fff; font-size: 1rem; font-weight: 700; outline: none; }
+    textarea, .output-box { width: 100%; border-radius: 13px; font-size: 1.08rem; background: #192241; color: #fff; border: none; padding: 1em 1em; box-shadow: 0 2px 8px #00fff314; outline: none; transition: box-shadow 0.2s; resize: none; min-height: 65px; font-weight: 500; }
+    .output-box { background: #171b33; border: 2px solid #00f2ff18; font-weight: 800; text-shadow: 0 1px 7px #00f8ff13; min-height: 65px; display: flex; align-items: center; font-size: 1.1rem; }
     .btn-row { display: flex; width: 100%; justify-content: center; gap: 1em; margin-top: 1em; margin-bottom: 0.25em; flex-wrap: wrap; }
-    .main-btn, .mic-btn, .clear-btn, .speak-btn {
-      padding: 0.75em 1.23em; font-size: 1.07rem; font-weight: 800;
-      border: none; border-radius: 13px;
-      background: linear-gradient(90deg, #21c8ff 33%, #ff6ae7 100%);
-      color: #fff; cursor: pointer; box-shadow: 0 1px 7px #00fff44a;
-      transition: background 0.18s, transform 0.11s; margin-bottom: 0.08em; margin-right: 0.09em; outline: none; font-family: inherit;
-    }
-    .mic-btn { background: linear-gradient(120deg,#2cffb9 10%, #21c8ff 85%); color: #181c38; font-size: 1.2em; font-weight: 900; box-shadow: 0 0 14px #00ffd7bb; }
-    .speak-btn { background: linear-gradient(120deg, #ffd52c 40%, #21c8ff 100%); color: #191b2d; font-weight: 900; font-size: 1.13em; box-shadow: 0 0 15px #a7f61b66; }
-    .clear-btn { background: linear-gradient(120deg, #ff607a 55%, #ff6ae7 100%); color: #fff; font-weight: 900; box-shadow: 0 0 9px #ff7091a9; }
-    @media (max-width: 950px) {
-      .container { padding: 1.1em 0.4em; }
-      .lang-panel { max-width: 97vw; }
-      .logo-bar img { width: 115px; }
-    }
-    @media (max-width: 800px) {
-      .flip-row { flex-direction: column; gap: 1.3em; }
-      .container { padding: 0.5em 0.2em; border-radius: 0; }
-      .flip-btn { margin: 0.7em auto 0.7em auto; align-self: center; }
-    }
+    .main-btn, .mic-btn, .clear-btn, .speak-btn, .auto-btn { padding: 0.67em 1.15em; font-size: 1.03rem; font-weight: 800; border: none; border-radius: 12px; background: linear-gradient(90deg, #21c8ff 33%, #ff6ae7 100%); color: #fff; cursor: pointer; box-shadow: 0 1px 7px #00fff44a; transition: background 0.16s, transform 0.11s; margin-bottom: 0.08em; margin-right: 0.09em; outline: none; font-family: inherit; }
+    .auto-btn { background: linear-gradient(120deg,#fffc7a 10%, #21c8ff 85%); color: #181c38; font-size: 1.05em; font-weight: 900; }
+    .mic-btn { background: linear-gradient(120deg,#2cffb9 10%, #21c8ff 85%); color: #181c38; font-size: 1.2em; font-weight: 900; box-shadow: 0 0 13px #00ffd7aa; }
+    .speak-btn { background: linear-gradient(120deg, #ffd52c 40%, #21c8ff 100%); color: #191b2d; font-weight: 900; font-size: 1.1em; box-shadow: 0 0 13px #a7f61b55; }
+    .clear-btn { background: linear-gradient(120deg, #ff607a 55%, #ff6ae7 100%); color: #fff; font-weight: 900; box-shadow: 0 0 8px #ff7091a8; }
+    @media (max-width: 800px) { .row { flex-direction: column; gap: 1.2em; } .container { padding: 0.5em 0.2em; border-radius: 0; } }
   </style>
 </head>
 <body>
   <div class="logo-bar">
-    <img src="zox-logo.png" alt="ZOX Robotics Logo" id="zoxLogo">
+    <img src="zox-logo.png" alt="ZOX Robotics Logo">
   </div>
   <div class="container">
-    <h2>Nova Translator</h2>
-    <div class="flip-row">
-      <!-- Input language panel -->
+    <h2>Nova Voice Translator</h2>
+    <div class="row">
       <div class="lang-panel">
         <div class="label">Input Language</div>
-        <div class="lang-select-row">
-          <select id="inputLang">
-            <option value="en">English</option>
-            <option value="es">Spanish</option>
-            <option value="fr">French</option>
-            <option value="de">German</option>
-            <option value="zh">Chinese (Simplified)</option>
-            <option value="hi">Hindi</option>
-            <option value="ar">Arabic</option>
-            <option value="ru">Russian</option>
-            <option value="ja">Japanese</option>
-            <option value="pt">Portuguese</option>
-            <option value="it">Italian</option>
-          </select>
-        </div>
+        <select id="inputLang">
+          <option value="en">English</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+          <option value="de">German</option>
+          <option value="zh">Chinese (Simplified)</option>
+          <option value="hi">Hindi</option>
+          <option value="ar">Arabic</option>
+          <option value="ru">Russian</option>
+          <option value="ja">Japanese</option>
+          <option value="pt">Portuguese</option>
+          <option value="it">Italian</option>
+        </select>
         <textarea id="inputText" placeholder="Type or speak..."></textarea>
       </div>
-      <!-- Flip button -->
-      <button class="flip-btn" id="flipBtn" title="Swap languages">&#8646;</button>
-      <!-- Output language panel -->
       <div class="lang-panel">
         <div class="label">Target Language</div>
-        <div class="lang-select-row">
-          <select id="outputLang">
-            <option value="es">Spanish</option>
-            <option value="en">English</option>
-            <option value="fr">French</option>
-            <option value="de">German</option>
-            <option value="zh">Chinese (Simplified)</option>
-            <option value="hi">Hindi</option>
-            <option value="ar">Arabic</option>
-            <option value="ru">Russian</option>
-            <option value="ja">Japanese</option>
-            <option value="pt">Portuguese</option>
-            <option value="it">Italian</option>
-          </select>
-        </div>
+        <select id="outputLang">
+          <option value="es">Spanish</option>
+          <option value="en">English</option>
+          <option value="fr">French</option>
+          <option value="de">German</option>
+          <option value="zh">Chinese (Simplified)</option>
+          <option value="hi">Hindi</option>
+          <option value="ar">Arabic</option>
+          <option value="ru">Russian</option>
+          <option value="ja">Japanese</option>
+          <option value="pt">Portuguese</option>
+          <option value="it">Italian</option>
+        </select>
         <div id="translatedText" class="output-box"></div>
       </div>
     </div>
     <div class="btn-row">
-      <button class="main-btn" id="translateBtn">Translate</button>
-      <button class="mic-btn" id="micBtn" title="Speak Input">🎤</button>
-      <button class="speak-btn" id="speakBtn" title="Speak Output">🔊</button>
+      <button class="auto-btn" id="autoListenBtn">Start Assistant</button>
       <button class="clear-btn" id="clearBtn" title="Clear All">Clear</button>
+      <button class="speak-btn" id="speakBtn" title="Speak Output">🔊</button>
+    </div>
+    <div style="font-size:0.92em;color:#8ff; margin-top:0.8em; text-align:center;">
+      Say: <b>Translate "hello" to Arabic</b> or <b>Change language to French</b> or just speak what you want translated.<br>
+      <span style="color:#ffa;">(Give mic access when asked!)</span>
     </div>
   </div>
   <script>
-    // Elements
-    const inputText = document.getElementById('inputText');
-    const inputLang = document.getElementById('inputLang');
-    const outputLang = document.getElementById('outputLang');
-    const translateBtn = document.getElementById('translateBtn');
-    const flipBtn = document.getElementById('flipBtn');
-    const micBtn = document.getElementById('micBtn');
-    const translatedText = document.getElementById('translatedText');
-    const speakBtn = document.getElementById('speakBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    inputLang.value = "en";
-    outputLang.value = "es";
+    const langMap = {
+      en: "English", es: "Spanish", fr: "French", de: "German", zh: "Chinese (Simplified)", hi: "Hindi",
+      ar: "Arabic", ru: "Russian", ja: "Japanese", pt: "Portuguese", it: "Italian"
+    };
     const langCodeMap = {
       en: "en-US", es: "es-ES", fr: "fr-FR", de: "de-DE", zh: "zh-CN", hi: "hi-IN",
       ar: "ar-SA", ru: "ru-RU", ja: "ja-JP", pt: "pt-PT", it: "it-IT"
     };
-    // Flip logic
-    flipBtn.onclick = () => {
-      const oldInput = inputLang.value;
-      inputLang.value = outputLang.value;
-      outputLang.value = oldInput;
-      const temp = inputText.value;
-      inputText.value = translatedText.innerText;
-      translatedText.innerText = temp;
-      inputText.focus();
-    };
-    // Translate
-    translateBtn.onclick = async () => {
-      const text = inputText.value.trim();
-      const sourceLanguage = inputLang.value;
-      const targetLanguage = outputLang.value;
-      translatedText.innerText = ""; // Clear previous output first
-      if (!text) {
-        alert('Please enter text to translate.');
-        inputText.focus();
-        return;
-      }
-      try {
-        const res = await fetch('https://nova-translator-backend.onrender.com/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, sourceLanguage, targetLanguage })
-        });
-        const data = await res.json();
-        if (data.translatedText) {
-          translatedText.innerText = data.translatedText;
-          // Optionally, auto-speak:
-          // speak(data.translatedText, targetLanguage);
-        } else {
-          translatedText.innerText = "Translation failed: " + (data.error || "Unknown error");
-        }
-      } catch (err) {
-        translatedText.innerText = "Network or server error: " + err.message;
-      }
-      inputText.focus();
-    };
-    // Microphone speech-to-text
-    let micRecognition = null;
-    let micTimer = null;
-    micBtn.onclick = () => {
+    const inputLang = document.getElementById('inputLang');
+    const outputLang = document.getElementById('outputLang');
+    const inputText = document.getElementById('inputText');
+    const translatedText = document.getElementById('translatedText');
+    const clearBtn = document.getElementById('clearBtn');
+    const speakBtn = document.getElementById('speakBtn');
+    const autoListenBtn = document.getElementById('autoListenBtn');
+
+    let isListening = false, recognition = null;
+
+    function startContinuousAssistant() {
       if (!('webkitSpeechRecognition' in window)) {
         alert('Speech recognition not supported in this browser.');
         return;
       }
-      micRecognition = new webkitSpeechRecognition();
-      micRecognition.lang = langCodeMap[inputLang.value] || "en-US";
-      micRecognition.interimResults = true;
-      micRecognition.maxAlternatives = 1;
-      let finalTranscript = "";
-      micRecognition.onresult = (event) => {
-        let interimTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
+      if (recognition) recognition.abort();
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = langCodeMap[inputLang.value] || "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+      isListening = true;
+
+      recognition.onresult = (event) => {
+        const spokenText = event.results[0][0].transcript.trim().toLowerCase();
+        processVoiceCommand(spokenText);
+      };
+      recognition.onend = () => {
+        if (isListening) setTimeout(() => recognition.start(), 400); // restart quickly
+      };
+      recognition.onerror = (event) => {
+        if (event.error !== "no-speech") alert("Speech error: " + event.error);
+        isListening = false;
+      };
+      recognition.start();
+    }
+
+    function processVoiceCommand(spokenText) {
+      // 1. Change target language
+      const changeLangRegex = /(change|set|switch)( (target|output))? language (to|into|as)?\s*([a-z]+)/i;
+      const translateRegex = /(translate|say|how do you say) (.+?)( to | into | in )?([a-z]+)?$/i;
+      let match = spokenText.match(changeLangRegex);
+      if (match) {
+        const userLang = match[6];
+        for (const [code, name] of Object.entries(langMap)) {
+          if (name.toLowerCase().includes(userLang)) {
+            outputLang.value = code;
+            speak(`Target language changed to ${name}`, inputLang.value);
+            return;
           }
         }
-        inputText.value = finalTranscript + interimTranscript;
-      };
-      micRecognition.onerror = (event) => {
-        if (micTimer) clearTimeout(micTimer);
-        alert('Speech recognition error: ' + event.error);
-      };
-      micRecognition.onend = () => {
-        if (micTimer) clearTimeout(micTimer);
-        micTimer = setTimeout(() => {
-          if (inputText.value.trim()) {
-            translateBtn.onclick();
+        speak("Sorry, I couldn't find that language.", inputLang.value);
+        return;
+      }
+      // 2. Translation intent
+      match = spokenText.match(translateRegex);
+      if (match && match[2]) {
+        let phrase = match[2].trim();
+        let userLang = match[4];
+        if (userLang) {
+          for (const [code, name] of Object.entries(langMap)) {
+            if (name.toLowerCase().includes(userLang)) {
+              outputLang.value = code;
+            }
           }
-        }, 600); // quicker auto after speech
-      };
-      micRecognition.start();
-    };
-    // Speak output
+        }
+        inputText.value = phrase;
+        translateAndSpeak();
+        return;
+      }
+      // 3. Default: treat as text to translate
+      inputText.value = spokenText;
+      translateAndSpeak();
+    }
+
+    function translateAndSpeak() {
+      const text = inputText.value.trim();
+      const targetLanguage = outputLang.value;
+      translatedText.innerText = ""; // clear first
+      if (!text) return;
+      fetch('https://nova-translator-backend.onrender.com/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, targetLanguage })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.translatedText) {
+          translatedText.innerText = data.translatedText;
+          speak(data.translatedText, targetLanguage);
+        } else {
+          translatedText.innerText = "Translation failed: " + (data.error || "Unknown error");
+        }
+      });
+    }
+
     function speak(text, lang) {
       if ('speechSynthesis' in window && text) {
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = langCodeMap[lang] || lang || "en-US";
-        utter.rate = 1.02;
+        utter.rate = 1.03;
         utter.volume = 1;
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utter);
       }
     }
-    speakBtn.onclick = () => {
-      speak(translatedText.innerText, outputLang.value);
+
+    autoListenBtn.onclick = () => {
+      if (!isListening) {
+        startContinuousAssistant();
+        autoListenBtn.textContent = "Assistant Listening...";
+        autoListenBtn.disabled = true;
+        autoListenBtn.style.opacity = 0.65;
+      }
     };
+    speakBtn.onclick = () => { speak(translatedText.innerText, outputLang.value); };
     clearBtn.onclick = () => {
       inputText.value = '';
       translatedText.innerText = '';
       inputText.focus();
     };
-    // PWA install prompt
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
   </script>
 </body>
 </html>
