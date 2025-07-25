@@ -2,95 +2,296 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nova Translator | ZOX Robotics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root {
-      --bg: #1e1e2e;
-      --panel: #2a2a3e;
-      --text: #ffffff;
-      --primary: #4e9af1;
-      --secondary: #f18b40;
-      --highlight: #ffcc00;
+      --accent: #21c8ff;
+      --accent2: #ff6ae7;
+      --panel: #181c38;
+      --surface: #232a3a;
+      --text: #fff;
+      --highlight: #2cffb9;
+      --fail: #ff607a;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: var(--bg);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #232a3a 0%, #3b527b 100%);
       color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .logo-bar {
+      width: 100vw;
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
+      margin-top: 2em;
+      margin-bottom: 0.5em;
     }
-    .card {
+    .logo-bar img {
+      width: 160px;
+      height: auto;
+      object-fit: contain;
+      box-shadow: 0 2px 12px #13f5ff66;
+      border-radius: 14px;
+      border: 2.5px solid #10c6ff88;
+      background: #fff;
+      padding: 0.4em 1em 0.2em 1em;
+    }
+    .container {
+      max-width: 820px;
+      width: 97vw;
       background: var(--panel);
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      padding: 2rem;
-      width: 100%;
-      max-width: 500px;
+      border-radius: 28px;
+      box-shadow: 0 10px 32px #00a2ff55, 0 3px 24px #0004;
+      padding: 2.2em 2em 2em 2em;
+      margin: 0 auto;
+      border: 2.5px solid #21c8ff33;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .card h1 {
-      text-align: center;
-      margin-bottom: 1rem;
-      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    h2 {
+      font-size: 2.1rem;
+      margin-bottom: 1.2em;
+      font-weight: 900;
+      letter-spacing: 2.3px;
+      background: linear-gradient(90deg, var(--accent) 23%, var(--accent2) 87%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      font-size: 1.8rem;
+      margin-top: 0;
+      text-align: center;
+      text-shadow: 0 4px 18px #09ffe3a2;
     }
-    #log { text-align: center; margin-bottom: 1rem; color: var(--highlight); min-height: 1.2em; }
-    .row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-    select, textarea {
+    .flip-row {
+      display: flex;
+      width: 100%;
+      gap: 1em;
+      align-items: flex-end;
+      justify-content: center;
+      margin-bottom: 1.1em;
+    }
+    .lang-panel {
       flex: 1;
-      padding: 0.75rem;
-      border: none;
-      border-radius: 8px;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 1rem;
+      min-width: 220px;
+      max-width: 350px;
+      background: linear-gradient(120deg, #222a45 60%, #242a5c 100%);
+      padding: 1em 1em 1.1em 1em;
+      border-radius: 20px;
+      box-shadow: 0 2px 12px #13f7ff24;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border: 2px solid #5ad0fd33;
+      min-height: 180px;
     }
-    textarea { min-height: 100px; resize: none; }
-    #output {
-      padding: 0.75rem;
-      background: var(--bg);
-      border-radius: 8px;
-      min-height: 80px;
-      margin-bottom: 1rem;
+    .label {
+      color: var(--highlight);
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 0.35em;
+      letter-spacing: 0.03em;
+      text-shadow: 0 2px 8px #12fff9a0;
     }
-    .buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    button {
+    .lang-select-row {
+      display: flex;
+      gap: 0.4em;
+      align-items: center;
+      margin-bottom: 0.3em;
+    }
+    select {
       flex: 1;
-      padding: 0.75rem;
-      border: none;
-      border-radius: 8px;
-      background: var(--primary);
-      color: var(--text);
+      padding: 0.4em 0.9em;
+      border-radius: 10px;
+      border: 1.7px solid #28f3e988;
+      background: #232e48;
+      color: #fff;
       font-size: 1rem;
+      font-weight: 700;
+      outline: none;
+    }
+    textarea, .output-box {
+      width: 100%;
+      margin: 0.12em auto 0.1em auto;
+      border-radius: 12px;
+      font-size: 1.13rem;
+      background: #232a3a;
+      color: #fff;
+      border: none;
+      padding: 1em 1em;
+      box-shadow: 0 2px 9px #00fff324;
+      outline: none;
+      transition: box-shadow 0.2s;
+      resize: none;
+      min-height: 70px;
+      font-weight: 500;
+    }
+    .output-box {
+      background: #171b33;
+      border: 2px solid #00f2ff28;
+      font-weight: 800;
+      font-size: 1.13rem;
+      text-shadow: 0 1px 7px #00f8ff17;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+    }
+    .flip-btn {
+      margin: 0 0.4em 1.5em 0.4em;
+      align-self: flex-end;
+      background: linear-gradient(120deg, var(--accent2) 25%, var(--accent) 100%);
+      border: 3.5px solid #15e6ffc7;
+      border-radius: 50%;
+      width: 52px;
+      height: 52px;
+      color: #fff;
+      font-size: 2.1rem;
+      box-shadow: 0 2px 16px #33ffd1d7, 0 2px 10px #393c8c6b;
       cursor: pointer;
-      transition: background 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2;
+      outline: none;
+      filter: drop-shadow(0 0 16px #28fffa99);
+      transition: background 0.17s, transform 0.13s;
     }
-    button.secondary { background: var(--secondary); }
-    button.highlight { background: var(--highlight); color: var(--panel); }
-    button:hover { opacity: 0.9; }
+    .flip-btn:active { filter: brightness(1.2) scale(1.07); }
+    .btn-row {
+      display: flex;
+      width: 100%;
+      justify-content: center;
+      gap: 1em;
+      margin-top: 1.0em;
+      margin-bottom: 0.25em;
+      flex-wrap: wrap;
+    }
+    .main-btn, .mic-btn, .clear-btn, .speak-btn, .auto-listen-btn {
+      padding: 0.72em 1.3em;
+      font-size: 1.07rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(90deg, var(--accent) 30%, var(--accent2) 100%);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 1px 7px #00fff44a;
+      transition: background 0.16s, transform 0.11s;
+      margin-bottom: 0.08em;
+      margin-right: 0.1em;
+      outline: none;
+      font-family: inherit;
+    }
+    .mic-btn {
+      background: linear-gradient(120deg,#00ffd4 10%, #57deff 95%);
+      color: #181c38;
+      font-size: 1.18em;
+      font-weight: 900;
+      box-shadow: 0 0 20px #00ffd7cc;
+    }
+    .speak-btn {
+      background: linear-gradient(120deg, var(--highlight) 40%, var(--accent) 100%);
+      color: #16192c;
+      font-weight: 900;
+      font-size: 1.13em;
+      box-shadow: 0 0 18px #1fffd366;
+    }
+    .clear-btn {
+      background: linear-gradient(120deg, var(--fail) 45%, var(--accent2) 100%);
+      color: #fff;
+      font-weight: 900;
+      box-shadow: 0 0 10px #ff7091aa;
+    }
+    .auto-listen-btn {
+      background: linear-gradient(90deg, #16ffc1 20%, #3388ff 100%);
+      color: #181c38;
+      font-weight: 900;
+      font-size: 1.13em;
+      border: 2.2px solid #21c8ff88;
+      box-shadow: 0 0 20px #2cffb966;
+      margin-left: 0.45em;
+    }
+    .auto-listen-btn.active {
+      background: linear-gradient(90deg, #ffde67 40%, #2cffb9 100%);
+      color: #22223b;
+      border: 2.2px solid #ffeaad;
+    }
+    @media (max-width: 950px) {
+      .container { padding: 1.2em 0.5em; }
+      .lang-panel { max-width: 97vw; }
+      .logo-bar img { width: 120px; border-radius: 14px; }
+    }
+    @media (max-width: 800px) {
+      .flip-row {
+        flex-direction: column;
+        gap: 1.2em;
+      }
+      .container {
+        padding: 0.5em 0.2em;
+        border-radius: 0;
+      }
+      .flip-btn {
+        margin: 0.7em auto 0.7em auto;
+        align-self: center;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Nova Translator</h1>
-    <div id="log">Ready</div>
-    <div class="row">
-      <select id="inputLang"></select>
-      <select id="outputLang"></select>
+  <div class="logo-bar">
+    <img src="zox-logo.png" alt="ZOX Robotics Logo" id="zoxLogo">
+  </div>
+  <div class="container">
+    <h2>Nova Translator</h2>
+    <div class="flip-row">
+      <div class="lang-panel">
+        <div class="label">Input Language</div>
+        <div class="lang-select-row">
+          <select id="inputLang">
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="zh">Chinese (Simplified)</option>
+            <option value="hi">Hindi</option>
+            <option value="ar">Arabic</option>
+            <option value="ru">Russian</option>
+            <option value="ja">Japanese</option>
+            <option value="pt">Portuguese</option>
+            <option value="it">Italian</option>
+          </select>
+        </div>
+        <textarea id="inputText" placeholder="Type or speak..."></textarea>
+      </div>
+      <button class="flip-btn" id="flipBtn" title="Swap languages">&#8646;</button>
+      <div class="lang-panel">
+        <div class="label">Target Language</div>
+        <div class="lang-select-row">
+          <select id="outputLang">
+            <option value="es">Spanish</option>
+            <option value="en">English</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="zh">Chinese (Simplified)</option>
+            <option value="hi">Hindi</option>
+            <option value="ar">Arabic</option>
+            <option value="ru">Russian</option>
+            <option value="ja">Japanese</option>
+            <option value="pt">Portuguese</option>
+            <option value="it">Italian</option>
+          </select>
+        </div>
+        <div id="translatedText" class="output-box"></div>
+      </div>
     </div>
-    <textarea id="inputText" placeholder="..."></textarea>
-    <div id="output"></div>
-    <div class="buttons">
-      <button id="translateBtn">Translate</button>
-      <button id="micBtn" class="secondary">🎤 Mic</button>
-      <button id="speakBtn" class="highlight">🔊 Speak</button>
-      <button id="clearBtn" class="secondary">Clear</button>
-      <button id="assistantBtn" class="highlight">Assistant</button>
+    <div class="btn-row">
+      <button class="main-btn" id="translateBtn">Translate</button>
+      <button class="mic-btn" id="micBtn" title="Speak Input">🎤</button>
+      <button class="speak-btn" id="speakBtn" title="Speak Output">🔊</button>
+      <button class="clear-btn" id="clearBtn" title="Clear All">Clear</button>
+      <button class="auto-listen-btn" id="autoListenBtn" title="Assistant Bot">Assistant</button>
     </div>
   </div>
   <script>
@@ -106,13 +307,51 @@
     const outputLang = document.getElementById('outputLang');
     const inputText = document.getElementById('inputText');
     const translatedText = document.getElementById('translatedText');
+    const translateBtn = document.getElementById('translateBtn');
     const clearBtn = document.getElementById('clearBtn');
     const speakBtn = document.getElementById('speakBtn');
+    const micBtn = document.getElementById('micBtn');
+    const flipBtn = document.getElementById('flipBtn');
     const autoListenBtn = document.getElementById('autoListenBtn');
-  
+
     let recognition = null;
     let isListening = false;
-  
+
+    inputLang.value = "en";
+    outputLang.value = "es";
+
+    function speak(text, lang) {
+      if ('speechSynthesis' in window && text) {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = langCodeMap[lang] || lang || "en-US";
+        utter.rate = 1.03;
+        utter.volume = 1;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    function waitForSpeechEnd() {
+      return new Promise(resolve => {
+        if (!('speechSynthesis' in window)) return resolve();
+        if (!window.speechSynthesis.speaking) return resolve();
+        let id = setInterval(() => {
+          if (!window.speechSynthesis.speaking) {
+            clearInterval(id);
+            resolve();
+          }
+        }, 100);
+      });
+    }
+
+    function stopAssistant() {
+      isListening = false;
+      if (recognition) recognition.abort();
+      autoListenBtn.textContent = "Assistant";
+      autoListenBtn.classList.remove('active');
+      autoListenBtn.disabled = false;
+    }
+
     function startAssistant() {
       if (!('webkitSpeechRecognition' in window)) {
         alert('Speech recognition not supported in this browser.');
@@ -127,11 +366,11 @@
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
       isListening = true;
-  
+
       autoListenBtn.textContent = "Assistant Listening... (Click to stop)";
       autoListenBtn.classList.add('active');
       autoListenBtn.disabled = false;
-  
+
       recognition.onresult = async (event) => {
         const spokenText = event.results[0][0].transcript.trim();
         await processVoiceCommand(spokenText);
@@ -156,47 +395,31 @@
       };
       recognition.start();
     }
-  
-    function stopAssistant() {
-      isListening = false;
-      if (recognition) recognition.abort();
-      autoListenBtn.textContent = "Start Assistant";
-      autoListenBtn.classList.remove('active');
-      autoListenBtn.disabled = false;
-    }
-  
+
     autoListenBtn.onclick = () => {
       if (isListening) {
         stopAssistant();
       } else {
-        startAssistant();
+        speak("Hello! Which languages do you want to translate from and to?", "en");
+        setTimeout(() => { startAssistant(); }, 900);
       }
     };
-  
-    function waitForSpeechEnd() {
-      return new Promise(resolve => {
-        if (!('speechSynthesis' in window)) return resolve();
-        if (!window.speechSynthesis.speaking) return resolve();
-        let id = setInterval(() => {
-          if (!window.speechSynthesis.speaking) {
-            clearInterval(id);
-            resolve();
-          }
-        }, 100);
-      });
-    }
-  
+
+    // Robust voice parser: supports "translate from X to Y", "X to Y", etc.
     async function processVoiceCommand(spokenText) {
-      const fromToRegex = /translate (.+?) from ([a-z]+) to ([a-z]+)/i;
-      let match = spokenText.match(fromToRegex);
-      if (match) {
-        const phrase = match[1].trim();
-        const fromLang = match[2];
-        const toLang = match[3];
+      const text = spokenText.trim().toLowerCase();
+
+      let m = text.match(/(?:please\s*)?(?:translate|say|how do you say)?\s*(.+?)\s*(?:from|in)?\s*([a-z]+)\s*(?:to|into|in)\s*([a-z]+)/i);
+      if (m && m[1] && m[2] && m[3]) {
+        const phrase = m[1].trim();
+        const fromLang = m[2].trim();
+        const toLang = m[3].trim();
         let fromCode = null, toCode = null;
         for (const [code, name] of Object.entries(langMap)) {
-          if (name.toLowerCase().includes(fromLang.toLowerCase())) fromCode = code;
-          if (name.toLowerCase().includes(toLang.toLowerCase())) toCode = code;
+          if (name.toLowerCase().includes(fromLang)) fromCode = code;
+          if (name.toLowerCase().includes(toLang)) toCode = code;
+          if (code === fromLang) fromCode = code;
+          if (code === toLang) toCode = code;
         }
         if (fromCode) inputLang.value = fromCode;
         if (toCode) outputLang.value = toCode;
@@ -204,30 +427,58 @@
         await translateAndSpeak();
         return;
       }
-  
-      const translateRegex = /(translate|say|how do you say) (.+?)( to | into | in )([a-z]+)/i;
-      match = spokenText.match(translateRegex);
-      if (match && match[2]) {
-        let phrase = match[2].trim();
-        let userLang = match[4];
-        if (userLang) {
-          for (const [code, name] of Object.entries(langMap)) {
-            if (name.toLowerCase().includes(userLang.toLowerCase())) {
-              outputLang.value = code;
-            }
+
+      m = text.match(/translate (?:from)?\s*([a-z]+)\s*(?:to|into|in)\s*([a-z]+)/i);
+      if (m && m[1] && m[2]) {
+        let fromLang = m[1], toLang = m[2];
+        let fromCode = null, toCode = null;
+        for (const [code, name] of Object.entries(langMap)) {
+          if (name.toLowerCase().includes(fromLang)) fromCode = code;
+          if (name.toLowerCase().includes(toLang)) toCode = code;
+          if (code === fromLang) fromCode = code;
+          if (code === toLang) toCode = code;
+        }
+        if (fromCode) inputLang.value = fromCode;
+        if (toCode) outputLang.value = toCode;
+        speak(`Okay, translating from ${langMap[fromCode] || fromLang} to ${langMap[toCode] || toLang}. What do you want to translate?`, fromCode || 'en');
+        return;
+      }
+
+      m = text.match(/(?:change language )?([a-z]+)\s*(?:to|into|in)\s*([a-z]+)/i);
+      if (m && m[1] && m[2]) {
+        let fromLang = m[1], toLang = m[2];
+        let fromCode = null, toCode = null;
+        for (const [code, name] of Object.entries(langMap)) {
+          if (name.toLowerCase().includes(fromLang)) fromCode = code;
+          if (name.toLowerCase().includes(toLang)) toCode = code;
+          if (code === fromLang) fromCode = code;
+          if (code === toLang) toCode = code;
+        }
+        if (fromCode) inputLang.value = fromCode;
+        if (toCode) outputLang.value = toCode;
+        speak(`Translating from ${langMap[fromCode] || fromLang} to ${langMap[toCode] || toLang}. Say your phrase.`, fromCode || 'en');
+        return;
+      }
+
+      m = text.match(/(?:translate|say|how do you say)\s*(.+?)\s*(?:to|into|in)\s*([a-z]+)/i);
+      if (m && m[1] && m[2]) {
+        let phrase = m[1].trim();
+        let toLang = m[2].trim();
+        for (const [code, name] of Object.entries(langMap)) {
+          if (name.toLowerCase().includes(toLang) || code === toLang) {
+            outputLang.value = code;
           }
         }
         inputText.value = phrase;
         await translateAndSpeak();
         return;
       }
-  
-      const changeLangRegex = /(change|set|switch)( (target|output))? language (to|into|as)?\\s*([a-z]+)/i;
-      match = spokenText.match(changeLangRegex);
-      if (match) {
-        const userLang = match[5];
+
+      m = text.match(/change (target|output)? ?language (to|into|as)?\s*([a-z]+)/i);
+      if (m && m[3]) {
+        let userLang = m[3].trim();
         for (const [code, name] of Object.entries(langMap)) {
-          if (name.toLowerCase().includes((userLang||'').toLowerCase())) {
+          if (name.toLowerCase().includes(userLang) || code === userLang) {
             outputLang.value = code;
             speak(`Target language changed to ${name}`, inputLang.value);
             return;
@@ -236,17 +487,25 @@
         speak("Sorry, I couldn't find that language.", inputLang.value);
         return;
       }
-  
-      if (/stop (assistant|listening|bot)/i.test(spokenText)) {
+
+      if (/stop (assistant|listening|bot)/i.test(text)) {
         speak("Stopping assistant. Goodbye.", inputLang.value);
         stopAssistant();
         return;
       }
-  
+
+      for (const [code, name] of Object.entries(langMap)) {
+        if (text === name.toLowerCase() || text === code) {
+          outputLang.value = code;
+          speak(`Target language changed to ${name}`, inputLang.value);
+          return;
+        }
+      }
+
       inputText.value = spokenText;
       await translateAndSpeak();
     }
-  
+
     async function translateAndSpeak() {
       const text = inputText.value.trim();
       const targetLanguage = outputLang.value;
@@ -271,25 +530,60 @@
         speak("Sorry, network or server error.", inputLang.value);
       }
     }
-  
-    function speak(text, lang) {
-      if ('speechSynthesis' in window && text) {
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = langCodeMap[lang] || lang || "en-US";
-        utter.rate = 1.03;
-        utter.volume = 1;
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utter);
-      }
-    }
-  
+
     speakBtn.onclick = () => { speak(translatedText.innerText, outputLang.value); };
     clearBtn.onclick = () => {
       inputText.value = '';
       translatedText.innerText = '';
       inputText.focus();
     };
-  
+
+    translateBtn.onclick = () => { translateAndSpeak(); };
+    flipBtn.onclick = () => {
+      const oldInput = inputLang.value;
+      inputLang.value = outputLang.value;
+      outputLang.value = oldInput;
+      const temp = inputText.value;
+      inputText.value = translatedText.innerText;
+      translatedText.innerText = temp;
+      inputText.focus();
+    };
+
+    micBtn.onclick = () => {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('Speech recognition not supported in this browser.');
+        return;
+      }
+      if (recognition) recognition.abort();
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = langCodeMap[inputLang.value] || "en-US";
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      let finalTranscript = "";
+      recognition.onresult = (event) => {
+        let interimTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        inputText.value = finalTranscript + interimTranscript;
+      };
+      recognition.onerror = (event) => {
+        alert('Speech recognition error: ' + event.error);
+      };
+      recognition.onend = () => {
+        setTimeout(() => {
+          if (inputText.value.trim()) {
+            translateAndSpeak();
+          }
+        }, 1000);
+      };
+      recognition.start();
+    };
+
     inputText.addEventListener("keydown", function(event) {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
@@ -297,6 +591,5 @@
       }
     });
   </script>
-  
 </body>
 </html>
