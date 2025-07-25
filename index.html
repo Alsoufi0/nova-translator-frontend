@@ -184,70 +184,93 @@
   
     // Voice Command Parsing + Actions
     async function processVoiceCommand(spokenText) {
-      // 1. "translate <PHRASE> from <LANG1> to <LANG2>"
-      const fromToRegex = /translate (.+?) from ([a-z]+) to ([a-z]+)/i;
-      let match = spokenText.match(fromToRegex);
-      if (match) {
-        const phrase = match[1].trim();
-        const fromLang = match[2];
-        const toLang = match[3];
-        let fromCode = null, toCode = null;
-        for (const [code, name] of Object.entries(langMap)) {
-          if (name.toLowerCase().includes(fromLang)) fromCode = code;
-          if (name.toLowerCase().includes(toLang)) toCode = code;
-        }
-        if (fromCode) inputLang.value = fromCode;
-        if (toCode) outputLang.value = toCode;
-        inputText.value = phrase;
-        await translateAndSpeak();
-        return;
-      }
-  
-      // 2. "translate <PHRASE> to <LANG2>" or "how do you say <PHRASE> in <LANG2>"
-      const translateRegex = /(translate|say|how do you say) (.+?)( to | into | in )([a-z]+)$/i;
-      match = spokenText.match(translateRegex);
-      if (match && match[2]) {
-        let phrase = match[2].trim();
-        let userLang = match[4];
-        if (userLang) {
-          for (const [code, name] of Object.entries(langMap)) {
-            if (name.toLowerCase().includes(userLang)) {
-              outputLang.value = code;
-            }
-          }
-        }
-        inputText.value = phrase;
-        await translateAndSpeak();
-        return;
-      }
-  
-      // 3. "change language to <LANG2>"
-      const changeLangRegex = /(change|set|switch)( (target|output))? language (to|into|as)?\s*([a-z]+)/i;
-      match = spokenText.match(changeLangRegex);
-      if (match) {
-        const userLang = match[6];
-        for (const [code, name] of Object.entries(langMap)) {
-          if (name.toLowerCase().includes(userLang)) {
-            outputLang.value = code;
-            speak(`Target language changed to ${name}`, inputLang.value);
-            return;
-          }
-        }
-        speak("Sorry, I couldn't find that language.", inputLang.value);
-        return;
-      }
-  
-      // 4. "stop assistant"
-      if (/stop (assistant|listening|bot)/i.test(spokenText)) {
-        speak("Stopping assistant. Goodbye.", inputLang.value);
-        stopAssistant();
-        return;
-      }
-  
-      // 5. Just treat as text to translate
-      inputText.value = spokenText;
-      await translateAndSpeak();
+  // 1. "translate <PHRASE> from <LANG1> to <LANG2>"
+  const fromToRegex = /translate (.+?) from ([a-z\s]+) to ([a-z\s]+)/i;
+  let match = spokenText.match(fromToRegex);
+  if (match) {
+    const phrase = match[1].trim();
+    const fromLangRaw = match[2].trim();
+    const toLangRaw = match[3].trim();
+    let fromCode = null, toCode = null;
+
+    // Robust matching for language names
+    for (const [code, name] of Object.entries(langMap)) {
+      if (name.toLowerCase().includes(fromLangRaw.toLowerCase()) || fromLangRaw.toLowerCase().includes(name.toLowerCase())) fromCode = code;
+      if (name.toLowerCase().includes(toLangRaw.toLowerCase()) || toLangRaw.toLowerCase().includes(name.toLowerCase())) toCode = code;
     }
+    if (fromCode) inputLang.value = fromCode;
+    if (toCode) outputLang.value = toCode;
+    inputText.value = phrase;
+    if (fromCode && toCode) {
+      speak(`Input language set to ${langMap[fromCode]}, target language set to ${langMap[toCode]}.`, inputLang.value);
+    }
+    await translateAndSpeak();
+    return;
+  }
+
+  // 2. "translate ... to <LANG2>"
+  const translateRegex = /(translate|say|how do you say) (.+?)( to | into | in )([a-z\s]+)$/i;
+  match = spokenText.match(translateRegex);
+  if (match && match[2]) {
+    let phrase = match[2].trim();
+    let userLang = match[4].trim();
+    if (userLang) {
+      for (const [code, name] of Object.entries(langMap)) {
+        if (name.toLowerCase().includes(userLang.toLowerCase()) || userLang.toLowerCase().includes(name.toLowerCase())) {
+          outputLang.value = code;
+          speak(`Target language set to ${name}.`, inputLang.value);
+        }
+      }
+    }
+    inputText.value = phrase;
+    await translateAndSpeak();
+    return;
+  }
+
+  // 3. "change language to <LANG2>"
+  const changeLangRegex = /(change|set|switch)( (target|output))? language (to|into|as)?\s*([a-z\s]+)/i;
+  match = spokenText.match(changeLangRegex);
+  if (match) {
+    const userLang = match[6]?.trim();
+    for (const [code, name] of Object.entries(langMap)) {
+      if (name.toLowerCase().includes(userLang.toLowerCase()) || userLang.toLowerCase().includes(name.toLowerCase())) {
+        outputLang.value = code;
+        speak(`Target language changed to ${name}.`, inputLang.value);
+        return;
+      }
+    }
+    speak("Sorry, I couldn't find that language.", inputLang.value);
+    return;
+  }
+
+  // 4. "change input language to <LANG1>"
+  const changeInputLangRegex = /(change|set|switch) input language (to|into|as)?\s*([a-z\s]+)/i;
+  match = spokenText.match(changeInputLangRegex);
+  if (match) {
+    const userLang = match[3]?.trim();
+    for (const [code, name] of Object.entries(langMap)) {
+      if (name.toLowerCase().includes(userLang.toLowerCase()) || userLang.toLowerCase().includes(name.toLowerCase())) {
+        inputLang.value = code;
+        speak(`Input language changed to ${name}.`, inputLang.value);
+        return;
+      }
+    }
+    speak("Sorry, I couldn't find that input language.", inputLang.value);
+    return;
+  }
+
+  // 5. "stop assistant"
+  if (/stop (assistant|listening|bot)/i.test(spokenText)) {
+    speak("Stopping assistant. Goodbye.", inputLang.value);
+    stopAssistant();
+    return;
+  }
+
+  // 6. Just treat as text to translate
+  inputText.value = spokenText;
+  await translateAndSpeak();
+}
+
   
     async function translateAndSpeak() {
       const text = inputText.value.trim();
